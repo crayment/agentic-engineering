@@ -38,6 +38,10 @@ When using file editing tools inside a worktree, always use absolute paths. Run 
 
 Once inside the worktree directory, all normal git operations work as expected — `git add`, `git commit`, `git push`, etc. Just stay in the worktree directory.
 
+### Commit early and often
+
+**Commit whenever the user might want to test or review the work.** Switching to a worktree with uncommitted changes is often annoying or outright impossible — but pointing the spotlight at a commit is instant and clean. When in doubt, commit.
+
 ## Cleaning Up
 
 When work is merged and you no longer need the worktree:
