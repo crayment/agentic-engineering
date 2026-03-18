@@ -23,8 +23,6 @@ Must show `nothing to commit, working tree clean`. If not, commit or stash all c
 git status
 ```
 
-**Record the current branch name** — this is required to undo the spotlight later (see [undo-spotlight.md](undo-spotlight.md)).
-
 **STOP and ask the user what to do if the working tree is dirty.** Do not proceed until the main clone is clean.
 
 ## Step 3 — Get the worktree HEAD SHA
@@ -65,7 +63,7 @@ Confirm the top commit matches the worktree HEAD and the tree is clean.
 
 ## Tell the user
 
-Inform the user that the spotlight is set, and **tell them the branch you recorded in Step 2** — they will need it to undo the spotlight.
+Inform the user that the spotlight is set.
 
 ## Notes
 
