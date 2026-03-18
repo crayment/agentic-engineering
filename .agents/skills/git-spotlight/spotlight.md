@@ -1,11 +1,3 @@
----
-name: spotlight-worktree
-description: Use this skill when you need to make the main clone of a repo reflect the current HEAD of a worktree branch. This switches the main clone to a persistent `spotlight` branch pointing at the worktree's latest commit, so the user can browse/review that work directly in their editor. Always record the main clone's previous branch — it is required to undo the spotlight later.
-tags:
-  - git
-  - worktree
----
-
 # Git: Spotlight Worktree
 
 Point the main clone's `spotlight` branch at the current HEAD of a worktree, so the user can review the work in their editor.
@@ -31,7 +23,7 @@ Must show `nothing to commit, working tree clean`. If not, commit or stash all c
 git status
 ```
 
-**Record the current branch name** — this is required for `git/undo-spotlight-worktree`.
+**Record the current branch name** — this is required to undo the spotlight later (see [undo-spotlight.md](undo-spotlight.md)).
 
 **STOP and ask the user what to do if the working tree is dirty.** Do not proceed until the main clone is clean.
 
@@ -79,4 +71,4 @@ Inform the user that the spotlight is set, and **tell them the branch you record
 
 - The `spotlight` branch is a plain local branch. It is never pushed to the remote.
 - `reset --hard` is safe here because `spotlight` is dedicated to this purpose — it has no independent history worth preserving.
-- If the worktree gains new commits later, re-run this skill to advance `spotlight` to the new HEAD.
+- If the worktree gains new commits later, re-run this procedure to advance `spotlight` to the new HEAD.
