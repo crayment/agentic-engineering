@@ -15,8 +15,6 @@ tags:
 
 Use this skill when a PR has review feedback and you want Birdhouse to coordinate the work.
 
-This skill expects the companion reply skill `[github-pr-review-replies](birdhouse:skill/github-pr-review-replies)` to be available when it is time to post threaded responses.
-
 This is a two-phase workflow:
 
 1. Investigate unresolved feedback in parallel.
@@ -321,7 +319,7 @@ Use this when the feedback is invalidated, weakened enough that no change is war
 The main agent replies to the investigation agent and asks it to:
 
 1. write the threaded reply
-2. use the [reply](birdhouse:skill/github-pr-review-replies) skill
+2. post it as a threaded reply using the GitHub `/replies` endpoint
 3. report back with the agent link, reply link, and exact reply text
 
 This path also covers partial agreement, for example:
@@ -340,12 +338,78 @@ The main agent replies to the investigation agent and asks it to:
 2. run relevant tests or checks
 3. create a focused commit
 4. push the branch
-5. use the [reply](birdhouse:skill/github-pr-review-replies) skill to post the threaded update
+5. post the threaded update using the GitHub `/replies` endpoint
 6. report back with the agent link, commit SHA, pushed branch state, reply link, and exact reply text
 
 For comments containing multiple issues, be explicit about which sub-issues are being fixed and which are being declined or deferred.
 
 The main agent should phrase these follow-ups like teammate delegation, not handoff to a black box. Ask the agent to carry its earlier analysis forward, keep within the approved scope, and report back crisply enough that the main agent can spot-review the result.
+
+## Posting Threaded Replies
+
+When replying to PR review feedback, always reply in the existing thread.
+
+Use the numeric review comment id, usually the `last_comment_id` from the fetched thread data.
+
+Basic usage:
+
+```bash
+gh api \
+  "/repos/OWNER/NAME/pulls/PR_NUMBER/comments/COMMENT_ID/replies" \
+  --method POST \
+  -f body="Your reply text here"
+```
+
+When posting from a file, read the file contents first.
+
+Correct:
+
+```bash
+REPLY_BODY=$(cat /path/to/reply.txt)
+gh api \
+  "/repos/OWNER/NAME/pulls/PR_NUMBER/comments/COMMENT_ID/replies" \
+  --method POST \
+  -f body="$REPLY_BODY"
+```
+
+Wrong:
+
+```bash
+gh api \
+  "/repos/OWNER/NAME/pulls/PR_NUMBER/comments/COMMENT_ID/replies" \
+  --method POST \
+  -f body=@/path/to/reply.txt
+```
+
+That wrong form posts the filename literally instead of the file contents.
+
+Complete example:
+
+```bash
+PR=6313
+COMMENT_ID=2508381598
+OWNER_REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
+OWNER=${OWNER_REPO%/*}
+NAME=${OWNER_REPO#*/}
+
+cat > /tmp/pr-reply-${COMMENT_ID}.txt << 'EOF'
+Thanks for the review! I've addressed this by...
+EOF
+
+REPLY_BODY=$(cat /tmp/pr-reply-${COMMENT_ID}.txt)
+gh api \
+  "/repos/$OWNER/$NAME/pulls/$PR/comments/$COMMENT_ID/replies" \
+  --method POST \
+  -f body="$REPLY_BODY"
+```
+
+Do not use these for threaded review replies:
+
+- `gh pr review --comment`
+- `gh pr comment`
+- `-f body=@filename`
+
+Those create top-level comments or malformed replies instead of threaded responses.
 
 ## Commit Hygiene And Branch Safety
 
