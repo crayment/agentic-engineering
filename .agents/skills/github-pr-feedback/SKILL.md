@@ -25,8 +25,10 @@ The main agent owns orchestration.
 - Understand the PR's goal and the branch diff before delegating.
 - Fetch all unresolved feedback and group related items before spawning child agents.
 - Assign child agents investigation-only work in parallel.
+- Treat child agents as teammates, not disposable tools. Reuse them after investigation by following up, asking questions, pressure-testing conclusions, and delegating approved execution back to the most relevant agent.
 - Collect child-agent conclusions and classify feedback as `strengthened`, `weakened`, or `invalidated`.
 - Present the triage to the user and get approval before any code changes or PR replies.
+- Stay at the higher orchestration level during execution. Prefer to delegate approved work back to the investigation agent that already understands the issue, then review the result.
 - Execute approved items one at a time.
 - After each completed item, fetch unresolved feedback again and repeat until there are no unresolved threads or the user stops.
 
@@ -37,6 +39,7 @@ The main agent may coordinate many investigation agents in parallel, but only on
 - Do not make code changes during the investigation phase.
 - Do not post PR replies during the investigation phase.
 - Do not resolve threads.
+- The main agent should usually coordinate, review, and delegate rather than becoming the primary implementer.
 - Always include the specific comment link and author when presenting feedback.
 - Always say whether the feedback targets code changed in this PR or pre-existing code.
 - A single GitHub comment may contain multiple distinct issues. Split them when needed. It is valid to fix one point and explicitly decline another in the same reply.
@@ -122,10 +125,14 @@ Good delegation rule:
 
 - One child agent per independent investigation track.
 - Keep the number of tracks reasonable enough that you can review the results thoughtfully.
+- Give each investigation agent a specific, information-dense title that reflects the concern area so the main agent can reference it later.
+- Create fresh child agents for investigation by default. Do not clone yourself unless you intentionally need a fork of the same context for competing judgments on the same issue.
 
 ## Step 4: Investigation Agent Contract
 
 Investigation agents are researchers first. They do not change code until explicitly instructed later.
+
+Whenever practical, keep the same investigation agent attached to its issue through the whole lifecycle. The agent that investigated a feedback item is usually the best agent to refine its analysis, implement the approved fix, and draft or post the threaded reply.
 
 Each investigation agent must receive:
 
@@ -134,6 +141,9 @@ Each investigation agent must receive:
 - the assigned thread ids, comment ids, and links
 - instructions for how to fetch the feedback directly if they want to re-read it
 - the exact phrase: `strengthen, weaken, or invalidate`
+- instructions to report back with a concise title-friendly scope, since the parent will link to the agent in user-facing triage
+
+Fresh-agent default matters here. The main agent should hand child agents the PR intent explicitly instead of relying on inherited context from a self-clone.
 
 Each investigation agent should be told:
 
@@ -141,6 +151,7 @@ Each investigation agent should be told:
 - Investigate the relevant code and surrounding patterns.
 - Decide whether the feedback is strengthened, weakened, or invalidated by the codebase context and PR intent.
 - Split multi-issue comments into separate sub-issues when needed.
+- Expect follow-up questions from the main agent. Be prepared to defend, refine, or revise your judgment as more context emerges.
 - Do not write code.
 - Do not post replies.
 - Do not resolve threads.
@@ -209,6 +220,8 @@ Child agents should avoid over-investigating. The goal is enough context to make
 
 After child agents finish, the main agent consolidates their findings for the user.
 
+Before presenting final triage, the main agent should feel free to talk with the investigation agents. Ask follow-up questions, challenge weak reasoning, request sharper scope boundaries, and make them earn their recommendation.
+
 Present a triage report grouped as:
 
 - `strengthened` — likely valid in this PR's context; probably worth addressing
@@ -218,17 +231,66 @@ Present a triage report grouped as:
 For each item include:
 
 - comment link and author
+- investigating agent link in Birdhouse markdown form, for example `[Refresh cookie trust investigation](birdhouse:agent/agent_abc123)`
 - one-sentence summary of the concern
 - classification
 - changed-in-PR vs pre-existing
 - proposed action
 - short rationale
 
+If one investigation agent covered multiple comments, repeat that same agent link on each related item so the user can jump straight to the underlying analysis.
+
 The main agent should then propose the next serial item to address and ask for approval before acting.
+
+After the detailed triage, end with a short manager-style queue summary that answers these questions directly:
+
+- What are we addressing now?
+- What are we skipping with reply-only?
+- What are we deferring or leaving for later?
+- Which agent owns each item?
+
+Recommended summary sections:
+
+- `Address now`
+- `Skip / reply-only`
+- `Defer / decide later`
+- `Next serial step if approved`
+
+For each queued item in that summary include:
+
+- short issue label
+- relevant GitHub comment link or grouped links
+- owner agent link
+- planned action
+
+The `Next serial step if approved` section should be especially explicit:
+
+- name the single owner agent that will act next
+- name the exact item or grouped comments it will handle
+- confirm no other agent will modify the branch during that work
+- say what the main agent will report back with afterward
+
+When the user asks for an execution plan, answer at the orchestration level by default:
+
+- which investigation agent will own the item
+- whether the path is `reply-only` or `fix-then-reply`
+- what scope that agent is authorized to handle
+- confirmation that only one agent will modify the branch
+- what report-back artifacts will be returned
+
+Do not default to a code-level implementation rant. The main agent should stay high-level unless the user explicitly asks for fix mechanics.
 
 ## Step 7: Serial Execution Only
 
 After approval, the main agent continues working with child agents, but execution is serial.
+
+Preferred pattern:
+
+- The main agent follows up with the investigation agent that owns the item.
+- That agent performs the approved work.
+- The main agent reviews the result, decides whether it is good enough, and then moves to the next item.
+
+This keeps issue knowledge with the agent that already built context and lets the main agent stay focused on coordination, sequencing, and quality control.
 
 Only one agent at a time may:
 
@@ -252,7 +314,7 @@ The main agent replies to the investigation agent and asks it to:
 
 1. write the threaded reply
 2. use the [reply](birdhouse:skill/github-pr-review-replies) skill
-3. report back with the reply link and exact reply text
+3. report back with the agent link, reply link, and exact reply text
 
 This path also covers partial agreement, for example:
 
@@ -271,9 +333,11 @@ The main agent replies to the investigation agent and asks it to:
 3. create a focused commit
 4. push the branch
 5. use the [reply](birdhouse:skill/github-pr-review-replies) skill to post the threaded update
-6. report back with the commit SHA, pushed branch state, reply link, and exact reply text
+6. report back with the agent link, commit SHA, pushed branch state, reply link, and exact reply text
 
 For comments containing multiple issues, be explicit about which sub-issues are being fixed and which are being declined or deferred.
+
+The main agent should phrase these follow-ups like teammate delegation, not handoff to a black box. Ask the agent to carry its earlier analysis forward, keep within the approved scope, and report back crisply enough that the main agent can spot-review the result.
 
 ## Commit Hygiene And Branch Safety
 
@@ -306,5 +370,6 @@ Whether reporting investigation results or execution results, optimize for fast 
 - Do not dump full comment bodies unless the exact wording matters.
 - Summarize the point and its intent.
 - Prefer direct evidence from the diff and codebase over generic style opinions.
+- When child agents contribute to the result, link to them with Birdhouse markdown so the user can inspect the investigation directly.
 - Keep draft replies concise, respectful, and specific.
 - When reporting a posted reply, always include the reply link and quote the exact reply text.
