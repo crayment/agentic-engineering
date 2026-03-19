@@ -1,6 +1,11 @@
 ---
 name: github-pr-feedback
 description: Orchestrate Birdhouse child agents to investigate PR review feedback in parallel, classify it as strengthened, weakened, or invalidated, then address approved items serially with fixes or threaded replies.
+trigger_phrases:
+  - address pr feedback
+  - handle pr review comments
+  - triage review feedback
+  - respond to pull request feedback
 tags:
   - github
   - pull-request
@@ -9,6 +14,8 @@ tags:
 # GitHub PR Feedback
 
 Use this skill when a PR has review feedback and you want Birdhouse to coordinate the work.
+
+This skill expects the companion reply skill `[github-pr-review-replies](birdhouse:skill/github-pr-review-replies)` to be available when it is time to post threaded responses.
 
 This is a two-phase workflow:
 
@@ -60,7 +67,8 @@ PR=0000
 
 gh auth status && \
 git fetch origin --prune && \
-BASE=$(git merge-base HEAD origin/main) && \
+DEFAULT_BRANCH=$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name) && \
+BASE=$(git merge-base HEAD "origin/$DEFAULT_BRANCH") && \
 printf 'Merge-base: %s\n' "$BASE" && \
 git diff --stat "$BASE"...HEAD && \
 gh pr diff "$PR" -w -U0

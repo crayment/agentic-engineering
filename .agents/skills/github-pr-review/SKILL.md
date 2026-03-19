@@ -1,6 +1,11 @@
 ---
 name: github-pr-review
 description: Orchestrate Birdhouse child agents to review a pull request in parallel, cross-validate proposed feedback, and submit one batched GitHub review with inline comments and a final decision.
+trigger_phrases:
+  - review this pr
+  - run a pr review
+  - review pull request
+  - submit batched review
 tags:
   - github
   - pull-request
@@ -44,7 +49,6 @@ The main agent is the review lead.
 - Put PR-wide themes, praise, or non-line-specific guidance in the final review summary.
 - If a concern is invalidated, do not surface it as GitHub feedback.
 - If a concern is weakened but still worth mentioning, keep the wording humble and narrow.
-- Every posted inline comment must include the standard Birdhouse footer. The bundled scripts handle this automatically.
 
 ## Phase 1: Understand The PR
 
@@ -62,7 +66,8 @@ PR=0000
 
 gh auth status && \
 git fetch origin --prune && \
-BASE=$(git merge-base HEAD origin/main) && \
+DEFAULT_BRANCH=$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name) && \
+BASE=$(git merge-base HEAD "origin/$DEFAULT_BRANCH") && \
 printf 'Merge-base: %s\n' "$BASE" && \
 git diff --stat "$BASE"...HEAD && \
 gh pr diff "$PR" -w -U0
@@ -174,7 +179,7 @@ source_agents:
 Guidelines:
 
 - `NN-anchor.txt` contains only the exact anchor text to match in the target file.
-- `NN-body.md` contains only the human-facing comment body. Do not manually add the footer.
+- `NN-body.md` contains only the human-facing comment body.
 - `review-decision.txt` contains exactly one of `APPROVE`, `REQUEST_CHANGES`, or `COMMENT`.
 - `review-summary.md` contains the exact final review body to submit.
 
@@ -212,7 +217,7 @@ The submission owner should:
 1. verify the review workspace files are complete
 2. verify `gh auth status`
 3. check for an existing pending review tracking file in `/tmp`
-4. if a stale pending review file exists from a different run, stop and ask whether to reuse or discard it
+4. if a pending review file already exists, stop and ask whether to reuse or discard it before posting more comments
 5. run the bundled `batched-review.sh` once per approved inline comment
 6. run the bundled `submit-review.sh` once with the final review summary and event
 7. verify the review URL
@@ -231,10 +236,6 @@ This skill bundles helper scripts in the same directory:
 - `batched-review.sh` — add one inline comment to a pending review
 - `submit-review.sh` — submit the pending review with `APPROVE`, `REQUEST_CHANGES`, or `COMMENT`
 - `inline-comment.sh` — post one standalone inline comment immediately; not the default path
-
-These scripts automatically append this footer to posted inline comments:
-
-`Posted using the Birdhouse PR Review skill` with a link to `https://birdhouselabs.ai`
 
 ## Batched Submission Commands
 

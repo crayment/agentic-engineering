@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ABOUTME: Adds one inline comment to a pending GitHub pull request review.
-# ABOUTME: Appends the Birdhouse PR Review footer and reuses one pending review per PR.
+# ABOUTME: Appends the Birdhouse PR review footer and reuses one pending review per PR.
 
 set -euo pipefail
 set -f
@@ -43,7 +43,7 @@ fi
 [ -n "${LINE:-}" ] || { echo "Anchor not found in $PATH_IN_REPO" >&2; exit 1; }
 
 COMMENT_BODY=$(cat -- "$COMMENT_BODY_FILE_PATH")
-COMMENT_FOOTER='<sub>Posted using the <a href="https://birdhouselabs.ai">Birdhouse PR Review skill</a>.</sub>'
+COMMENT_FOOTER='<sub>Posted using the <a href="https://birdhouselabs.ai">Birdhouse PR review skill</a>.</sub>'
 COMMENT_BODY=$(printf "%s\n\n---\n\n%s\n" "$COMMENT_BODY" "$COMMENT_FOOTER")
 
 RESULT=$(gh api graphql -f query='

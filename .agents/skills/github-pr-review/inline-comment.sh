@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ABOUTME: Posts one standalone inline pull request comment immediately.
-# ABOUTME: Uses the same anchor matching and Birdhouse PR Review footer as batched review comments.
+# ABOUTME: Uses the same anchor matching and Birdhouse PR review footer as batched review comments.
 
 set -euo pipefail
 set -f
