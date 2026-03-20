@@ -1,6 +1,9 @@
 ---
 name: git-spotlight
 description: Use this skill to make the main clone of a repo reflect the current HEAD of a worktree branch for review. Use when you want to spotlight a worktree, make the main clone reflect a worktree's HEAD, or browse worktree work in your editor.
+trigger_phrases:
+  - spotlight worktree
+  - git spotlight
 tags:
   - git
   - worktree

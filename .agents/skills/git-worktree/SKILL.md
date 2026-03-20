@@ -1,6 +1,10 @@
 ---
 name: git-worktree
 description: Create isolated working directories using git worktrees without affecting the main workspace. Use when you want to use worktree, git worktree, worktree workflow, isolated development, work in worktree, create worktree, or worktree best practices.
+trigger_phrases:
+  - git worktree
+  - create a worktree
+  - use a worktree
 tags:
   - git
   - worktree

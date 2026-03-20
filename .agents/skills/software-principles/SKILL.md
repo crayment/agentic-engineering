@@ -1,6 +1,11 @@
 ---
 name: software-principles
 description: Core software development principles: code for readability and changeability, apply DRY wisely, test for confidence, and crash loudly on unexpected conditions.
+trigger_phrases:
+  - software principles
+  - coding principles
+  - engineering principles
+  - golden rules
 tags:
   - principles
   - architecture

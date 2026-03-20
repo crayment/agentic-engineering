@@ -1,6 +1,8 @@
 ---
 name: slack
 description: Use this skill when you need to interact with Slack — sending messages, posting thread replies, sending DMs, looking up users or channels, or reading channel history and threads.
+trigger_phrases:
+  - slack
 tags:
   - slack
 ---
