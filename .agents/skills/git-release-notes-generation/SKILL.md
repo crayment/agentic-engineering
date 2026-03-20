@@ -46,17 +46,18 @@ git log main..HEAD --stat
 
 Use this structure for your release notes:
 
+- `Features` and `Fixes` are optional sections. Include only the sections that are actually warranted by the branch.
+- If a branch primarily introduces a new feature, fold implementation corrections and polish into that feature description rather than listing them as separate fixes.
+- Use `Fixes` only for fixes to behavior that already shipped before this branch.
+
 ```markdown
 ## What's New
 
 ### ✨ Features
 - [User-facing feature descriptions]
 
-### 🐛 Bug Fixes
+### 🐛 Fixes
 - [User-visible bug fixes]
-
-### 💫 Improvements
-- [Performance, UX, and quality improvements]
 
 ---
 
@@ -71,27 +72,26 @@ Use this structure for your release notes:
 ### 📝 Documentation
 - [Doc updates, comments, README changes]
 
-## Files Changed
-[Summary of key files modified]
-
 ## Testing
 [What was tested, test coverage changes]
 ```
 
 ## Analysis Process
 
-1. Review commits and understand each change.
-2. Group by type: feature, bug fix, improvement, infrastructure, and so on.
-3. Focus on user impact.
-4. Include technical context.
-5. Mention testing.
+1. Determine the branch's primary shipped outcome.
+2. Separate new user-facing capabilities from fixes to already-shipped behavior.
+3. Group changes by release meaning, not by commit wording.
+4. Collapse iterative implementation fixes into the parent feature when they were never independently released.
+5. Focus on user impact.
+6. Include technical context.
+7. Mention testing.
 
 ## PR Preparation Hint
 
 If you are using this skill while preparing a pull request:
 
 - Treat the generated notes as a draft PR body, not just standalone release notes.
-- Keep the strongest reviewer-facing sections near the top, especially summary and testing.
+- Keep the strongest reviewer-facing sections near the top, especially the user-facing changes and testing.
 - Trim customer-marketing language if the audience is primarily engineers reviewing the PR.
 
 ## Example Output
@@ -103,7 +103,7 @@ If you are using this skill while preparing a pull request:
 - Added dark mode toggle in user preferences
 - New keyboard shortcut (Cmd+D) for duplicating items
 
-### 🐛 Bug Fixes
+### 🐛 Fixes
 - Fixed login redirect loop when session expires
 - Resolved memory leak in file upload component
 
@@ -112,11 +112,6 @@ If you are using this skill while preparing a pull request:
 ### 🏗️ Infrastructure
 - Upgraded React from v17 to v18
 - Added TypeScript strict mode
-
-### Files Changed
-- `src/components/LoginForm.tsx` - Session handling
-- `src/hooks/useTheme.ts` - Dark mode implementation
-- `package.json` - React upgrade
 
 ## Testing
 - Added unit tests for theme switching
