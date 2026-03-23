@@ -24,6 +24,7 @@ npx skills add crayment/agentic-engineering
 ├── github-pr-review/           # Multi-agent review + one batched GitHub submission
 ├── github-pull-request-creation/  # Heredoc-safe gh pr create with structured bodies
 ├── github-reply/               # Threaded PR replies via the GitHub /replies endpoint
+├── recruit-junior/             # Frame an agent as a junior who looks things up and cites sources
 ├── slack/                      # Send messages, DMs, thread replies via Slack API
 └── software-principles/        # Foundational engineering principles for agent context
 ```
