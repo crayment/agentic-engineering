@@ -46,6 +46,8 @@ Once inside the worktree directory, all normal git operations work as expected â
 
 **Commit whenever the user might want to test or review the work.** Switching to a worktree with uncommitted changes is often annoying or outright impossible â€” but pointing the spotlight at a commit is instant and clean. When in doubt, commit.
 
+**If the user asks you to go make something on a worktree, treat a commit as the default finish line unless they explicitly say not to commit.** Handing back a worktree with uncommitted changes makes review, testing, and spotlighting harder than it needs to be.
+
 ## Cleaning Up
 
 When work is merged and you no longer need the worktree:

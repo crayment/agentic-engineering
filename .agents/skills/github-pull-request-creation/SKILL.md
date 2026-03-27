@@ -34,16 +34,8 @@ gh pr create --title "Fix login redirect" --body "Fixes issue with OAuth callbac
 
 ```bash
 gh pr create --title "Add rocket boosters to the login button" --body "$(cat <<'EOF'
-## Summary
-
-Made the login button go REALLY fast. Like, uncomfortably fast.
-
-## Changes
-
-- Added flames emoji 🔥
-- Increased button velocity by 300%
-- Users now experience mild g-forces during authentication
-- Login success rate: still 100% (just faster)
+## ✨ Features
+- Added rocket boosters to the login button so authentication feels dramatically faster
 
 ## Testing
 
@@ -88,6 +80,8 @@ gh pr create --title "Feature: User preferences" --body "$(cat pr-description.md
 
 This works especially well when another step already generated a branch summary or release notes document for the PR.
 
+If release notes already exist, preserve their headings and bullets with only minimal reviewer-focused trimming.
+
 ## Avoid Fragile Inline Strings
 
 ```bash
@@ -99,4 +93,4 @@ Use heredoc instead.
 
 ## Overview
 
-Guides agents to use heredoc syntax when creating GitHub PRs with multi-line descriptions to avoid shell interpretation issues. Generated branch notes or release notes often make a good starting point for the PR body.
+Guides agents to use heredoc syntax when creating GitHub PRs with multi-line descriptions to avoid shell interpretation issues. Generated release notes should usually determine the PR body structure.

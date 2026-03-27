@@ -49,6 +49,8 @@ Use this structure for your release notes:
 - `Features` and `Fixes` are optional sections. Include only the sections that are actually warranted by the branch.
 - If a branch primarily introduces a new feature, fold implementation corrections and polish into that feature description rather than listing them as separate fixes.
 - Use `Fixes` only for fixes to behavior that already shipped before this branch.
+- If UI work, API work, and server support all enable the same new workflow, describe them as one feature bullet and move the implementation details into `Technical Changes`.
+- Do not turn enabling infrastructure into a user-facing feature bullet unless users can directly perceive it as a separate capability.
 
 ```markdown
 ## What's New
@@ -79,12 +81,14 @@ Use this structure for your release notes:
 ## Analysis Process
 
 1. Determine the branch's primary shipped outcome.
-2. Separate new user-facing capabilities from fixes to already-shipped behavior.
-3. Group changes by release meaning, not by commit wording.
-4. Collapse iterative implementation fixes into the parent feature when they were never independently released.
-5. Focus on user impact.
-6. Include technical context.
-7. Mention testing.
+2. Identify the smallest number of user-facing outcomes that fully describe the branch.
+3. Separate new user-facing capabilities from fixes to already-shipped behavior.
+4. Group changes by release meaning, not by commit wording or architecture layers.
+5. Collapse iterative implementation fixes into the parent feature when they were never independently released.
+6. Keep UI, API, and backend support together when they only exist to deliver one feature.
+7. Focus on user impact.
+8. Include technical context.
+9. Mention testing.
 
 ## PR Preparation Hint
 
@@ -101,7 +105,6 @@ If you are using this skill while preparing a pull request:
 
 ### ✨ Features
 - Added dark mode toggle in user preferences
-- New keyboard shortcut (Cmd+D) for duplicating items
 
 ### 🐛 Fixes
 - Fixed login redirect loop when session expires
@@ -110,8 +113,7 @@ If you are using this skill while preparing a pull request:
 ## Technical Changes
 
 ### 🏗️ Infrastructure
-- Upgraded React from v17 to v18
-- Added TypeScript strict mode
+- Added the settings persistence and theme wiring needed to support dark mode across sessions
 
 ## Testing
 - Added unit tests for theme switching
