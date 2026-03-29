@@ -190,7 +190,7 @@ For each issue or sub-issue, return:
 5. evidence from the codebase or diff
 6. proposed action: fix now / reply-only / defer
 7. risks or tradeoffs
-8. draft reply text if we choose to respond now
+8. draft reply text if we choose to respond now — include @ mention of whoever you're replying to
 ```
 
 ## Step 5: Investigation Standards
@@ -318,7 +318,7 @@ Use this when the feedback is invalidated, weakened enough that no change is war
 
 The main agent replies to the investigation agent and asks it to:
 
-1. write the threaded reply
+1. write the threaded reply — include @ mention of the author(s) you're responding to
 2. post it as a threaded reply using the GitHub `/replies` endpoint
 3. report back with the agent link, reply link, and exact reply text
 
@@ -338,7 +338,7 @@ The main agent replies to the investigation agent and asks it to:
 2. run relevant tests or checks
 3. create a focused commit
 4. push the branch
-5. post the threaded update using the GitHub `/replies` endpoint
+5. post the threaded update using the GitHub `/replies` endpoint — include @ mention of whoever you're replying to
 6. report back with the agent link, commit SHA, pushed branch state, reply link, and exact reply text
 
 For comments containing multiple issues, be explicit about which sub-issues are being fixed and which are being declined or deferred.
@@ -393,7 +393,7 @@ OWNER=${OWNER_REPO%/*}
 NAME=${OWNER_REPO#*/}
 
 cat > /tmp/pr-reply-${COMMENT_ID}.txt << 'EOF'
-Thanks for the review! I've addressed this by...
+@reviewer Thanks for the feedback! I've addressed this by...
 EOF
 
 REPLY_BODY=$(cat /tmp/pr-reply-${COMMENT_ID}.txt)
@@ -444,4 +444,5 @@ Whether reporting investigation results or execution results, optimize for fast 
 - Prefer direct evidence from the diff and codebase over generic style opinions.
 - When child agents contribute to the result, link to them with Birdhouse markdown so the user can inspect the investigation directly.
 - Keep draft replies concise, respectful, and specific.
-- When reporting a posted reply, always include the reply link and quote the exact reply text.
+- When reporting a posted reply, always include the reply link and quote the exact reply text
+- Always @ mention whoever you're replying to so they receive notification.

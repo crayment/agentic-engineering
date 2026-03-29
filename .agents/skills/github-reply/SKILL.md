@@ -62,6 +62,14 @@ gh api \
 
 That wrong form posts the filename literally instead of the file contents.
 
+## Reply Etiquette
+
+Always @ mention the author(s) you're replying to at the start of your message. This ensures they receive a notification since GitHub threaded replies do not auto-notify participants.
+
+Examples:
+- Single recipient: `@reviewer Thanks for the feedback...`
+- Multiple recipients: Address each person in their own section with their @ mention
+
 ## Complete Example
 
 ```bash
@@ -72,7 +80,7 @@ OWNER=${OWNER_REPO%/*}
 NAME=${OWNER_REPO#*/}
 
 cat > /tmp/pr-reply-${COMMENT_ID}.txt << 'EOF'
-Thanks for the review! I've addressed this by...
+@reviewer Thanks for the feedback! I've addressed this by...
 EOF
 
 REPLY_BODY=$(cat /tmp/pr-reply-${COMMENT_ID}.txt)
