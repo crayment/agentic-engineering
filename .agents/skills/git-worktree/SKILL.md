@@ -48,6 +48,15 @@ Once inside the worktree directory, all normal git operations work as expected â
 
 **If the user asks you to go make something on a worktree, treat a commit as the default finish line unless they explicitly say not to commit.** Handing back a worktree with uncommitted changes makes review, testing, and spotlighting harder than it needs to be.
 
+**Implementation complete: NEVER call worktree work complete, ready to test, or ready for handoff until the current changes are committed.**
+
+## Finishing Work
+
+DO NOT stop and tell the user you have made the changes without first committing your work! 
+When using the worktree workflow the human will likely be reviewing your commits - not unstaged changes. So please always commit before stopping.
+
+**Never clean up a worktree without checking for uncommitted changes first.**
+
 ## Cleaning Up
 
 When work is merged and you no longer need the worktree:
