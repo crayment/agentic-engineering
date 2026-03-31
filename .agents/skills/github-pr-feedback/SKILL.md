@@ -35,6 +35,7 @@ The main agent owns orchestration.
 - Present the triage to the user and get approval before any code changes or PR replies.
 - Stay at the higher orchestration level during execution. Prefer to delegate approved work back to the investigation agent that already understands the issue, then review the result.
 - Execute approved items one at a time.
+- Ensure any required threaded GitHub replies are actually posted before considering an item complete. Child agents may post them, but the main agent must verify that the reply exists on GitHub and that the exact intended text was posted.
 - After each completed item, fetch unresolved feedback again and repeat until there are no unresolved threads or the user stops.
 
 The main agent may coordinate many investigation agents in parallel, but only one agent may modify the branch at a time.
@@ -45,6 +46,7 @@ The main agent may coordinate many investigation agents in parallel, but only on
 - Do not post PR replies during the investigation phase.
 - Do not resolve threads.
 - The main agent should usually coordinate, review, and delegate rather than becoming the primary implementer.
+- An item is not complete until the code work is done, the branch state is correct, and any promised threaded reply is visibly posted on GitHub.
 - Always include the specific comment link and author when presenting feedback.
 - Always say whether the feedback targets code changed in this PR or pre-existing code.
 - A single GitHub comment may contain multiple distinct issues. Split them when needed. It is valid to fix one point and explicitly decline another in the same reply.
@@ -294,7 +296,7 @@ Preferred pattern:
 
 - The main agent follows up with the investigation agent that owns the item.
 - That agent performs the approved work.
-- The main agent reviews the result, decides whether it is good enough, and then moves to the next item.
+- The main agent reviews the result, verifies any required threaded reply is actually posted on GitHub, decides whether it is good enough, and only then moves to the next item.
 
 This keeps issue knowledge with the agent that already built context and lets the main agent stay focused on coordination, sequencing, and quality control.
 
@@ -322,6 +324,8 @@ The main agent replies to the investigation agent and asks it to:
 2. post it as a threaded reply using the GitHub `/replies` endpoint
 3. report back with the agent link, reply link, and exact reply text
 
+The main agent must still verify that the reply was really posted in the correct thread before marking the item complete.
+
 This path also covers partial agreement, for example:
 
 - one point in the comment was fixed earlier
@@ -340,6 +344,8 @@ The main agent replies to the investigation agent and asks it to:
 4. push the branch
 5. post the threaded update using the GitHub `/replies` endpoint — include @ mention of whoever you're replying to
 6. report back with the agent link, commit SHA, pushed branch state, reply link, and exact reply text
+
+The main agent must still verify that the reply was really posted in the correct thread before marking the item complete.
 
 For comments containing multiple issues, be explicit about which sub-issues are being fixed and which are being declined or deferred.
 
@@ -446,3 +452,4 @@ Whether reporting investigation results or execution results, optimize for fast 
 - Keep draft replies concise, respectful, and specific.
 - When reporting a posted reply, always include the reply link and quote the exact reply text
 - Always @ mention whoever you're replying to so they receive notification.
+- The main agent should not assume a drafted reply was posted. Always verify the posted reply link or re-fetch the thread data before reporting completion.
