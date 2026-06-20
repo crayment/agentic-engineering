@@ -30,10 +30,13 @@ With inline body for short descriptions:
 gh pr create --title "Fix login redirect" --body "Fixes issue with OAuth callback URL"
 ```
 
-## Multi-line Descriptions
+## Multi-line Descriptions — always write to a file first
+
+PR descriptions almost always contain markdown code blocks with backticks. Backticks inside `$()` command substitution terminate the substitution early and cause a syntax error. The safe, reliable pattern is to write the body to a temp file first, then read it:
 
 ```bash
-gh pr create --title "Add rocket boosters to the login button" --body "$(cat <<'EOF'
+# Step 1: write the body to a temp file
+cat > /tmp/pr-body.md << 'EOF'
 ## ✨ Features
 - Added rocket boosters to the login button so authentication feels dramatically faster
 
@@ -42,54 +45,52 @@ gh pr create --title "Add rocket boosters to the login button" --body "$(cat <<'
 - Tested on production (yolo)
 - My mouse caught fire but in a good way
 EOF
-)"
+
+# Step 2: create the PR from the file
+gh pr create --title "Add rocket boosters to the login button" --body "$(cat /tmp/pr-body.md)"
 ```
 
-How it works:
+This approach:
+- Handles backticks, code blocks, and special characters without escaping
+- Works regardless of PR body length or complexity
+- Is easy to inspect before submitting
 
-- `cat <<'EOF'` starts a heredoc and keeps the content literal.
-- `$(...)` captures the heredoc output as a string.
-- `--body "..."` receives the complete multi-line string.
-- Single quotes around `'EOF'` prevent variable expansion.
+**Never use inline heredoc with `$()` when the body contains backticks or code fences.** It will break.
 
 ## Common Options
 
 Draft PR:
 
 ```bash
-gh pr create --draft --title "WIP: Experimental feature" --body "..."
+gh pr create --draft --title "WIP: Experimental feature" --body "$(cat /tmp/pr-body.md)"
 ```
 
 Different base branch:
 
 ```bash
-gh pr create --base develop --title "Feature X" --body "..."
+gh pr create --base develop --title "Feature X" --body "$(cat /tmp/pr-body.md)"
 ```
 
 Add reviewers:
 
 ```bash
-gh pr create --title "Fix bug" --body "..." --reviewer alice,bob
+gh pr create --title "Fix bug" --body "$(cat /tmp/pr-body.md)" --reviewer alice,bob
 ```
-
-From a file:
-
-```bash
-gh pr create --title "Feature: User preferences" --body "$(cat pr-description.md)"
-```
-
-This works especially well when another step already generated a branch summary or release notes document for the PR.
 
 If release notes already exist, preserve their headings and bullets with only minimal reviewer-focused trimming.
 
-## Avoid Fragile Inline Strings
+## Avoid These Patterns
 
 ```bash
-# This breaks because the shell tries to interpret special characters and newlines
-gh pr create --title "Add rocket boosters!" --body "Added cool stuff!\nReally fast now!"
-```
+# BREAKS: backticks inside $() end the substitution early
+gh pr create --title "Fix bug" --body "$(cat <<'EOF'
+Run `bun test` to verify
+EOF
+)"
 
-Use heredoc instead.
+# BREAKS: shell tries to interpret special characters and newlines
+gh pr create --title "Add feature!" --body "Added cool stuff!\nReally fast now!"
+```
 
 ## Overview
 
