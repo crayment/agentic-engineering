@@ -53,9 +53,18 @@ Split the review into independent concern-tracks sized to the MR (e.g. correctne
 
 ## 4. Validate before believing
 
-- Each candidate finding is suspect. Refute it (a fresh agent told to disprove it, or a deliberate second pass). Drop what doesn't survive.
-- Where a claim is testable, **reproduce it locally before asserting it**. Note how you tested and the result in the comment.
-- Anchor every surviving finding to `file:line`.
+Treat every candidate finding as suspect — but validate differently depending on what kind of claim it is.
+
+**Empirical claims** ("this test passes", "this reproduces the bug", "CI is green", "this function returns X for input Y") — verify by actually running it, not by asking another model to weigh in. An agent reporting a clean test run is trustworthy on the pass/fail fact itself (fabricating a passing run is rare); the real risk is scope, not hallucination — check *what the test actually asserts*, not just that it exited 0. Prefer execution over debate whenever a claim is checkable this way (spin up the real test env if the repo has one, e.g. a `worktree-test-env`-style skill, in the same worktree).
+
+**Judgment claims** ("this is the right design", "this edge case matters", "this test covers the intended behavior", "this is architecturally sound") — these benefit hugely from **cross-model validation**. Same-model self-critique carries correlated blind spots: a model re-checking its own family's reasoning tends to miss the same things it already missed, so agreement isn't as informative as it looks. Instead:
+
+- Run the validator as a **separate, serial** subagent — it needs the original claim as input, so it cannot run in parallel with the agent that produced it (unlike the independent concern-track fan-out in step 3, which *should* be parallel).
+- Pin it to a **different model family** than the one that raised the claim (the `Task` tool's `model` parameter takes an explicit slug), pointed at the same worktree.
+- Brief it adversarially — "try hard to disprove this claim; cite code; run commands; don't just agree" — not "does this seem right to you?".
+- Reserve this for **Blocking** and high-confidence findings. Running it on every "notable, confirmed fine" note mostly burns tokens re-confirming low-stakes things.
+
+Anchor every surviving finding to `file:line`.
 
 ## 5. Assemble + get approval
 
@@ -136,6 +145,8 @@ glab api "projects/$PROJECT/merge_requests/<iid>/approvals"
 - Posting before the human approves.
 - Inline-discussion POST failing with "content-type '' is not supported" — set `--header "Content-Type: application/json"`.
 - Fanning out more agents than the MR warrants.
+- Treating same-model self-critique as if it were independent validation — it's correlated, not independent; use a different model family for judgment-claim validation (step 4).
+- Running the cross-model validator in parallel with the agent that produced the claim — it needs the claim as input, so it must run serially, after.
 
 ## Related skills
 
