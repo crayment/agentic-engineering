@@ -112,7 +112,17 @@ Present a queue, nothing posted yet:
 - **Outcome:** leaving threads open + withholding approval is the "please address" signal. Approve only when satisfied. Don't submit a formal "request changes" unless the team actually uses it.
 - **Tone:** concise, question-framed, collaborative. Credit good work. Skip style nitpicks.
 
-## 8. Close the loop
+## 8. Clean up review worktree
+
+After the review outcome is settled, clean up the local MR review checkout instead of leaving `mr-<iid>` branches and `.worktrees/mr-<iid>` directories behind.
+
+- If the MR was approved and no near-term follow-up work is expected, remove the MR worktree and local review branch after verifying the worktree has no uncommitted changes.
+- If the outcome is request-changes / unresolved threads / waiting on author updates, ask the user whether to clean it up now or keep it for follow-up review.
+- Use safe cleanup first: `git worktree remove .worktrees/mr-<iid>` then `git branch -d mr-<iid>`.
+- If the worktree has local changes, the branch is checked out elsewhere, or safe branch deletion fails, stop and ask before removing files or force-deleting anything.
+- Report what was removed and what was intentionally kept.
+
+## 9. Close the loop
 
 - Detect replies: re-read discussions and filter to notes that aren't yours and aren't bots (see recipes). A background monitor can watch for replies/pushes.
 - **Reply inside the existing thread** (`…/discussions/<id>/notes`), not a new thread.
