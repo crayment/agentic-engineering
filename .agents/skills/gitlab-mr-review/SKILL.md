@@ -66,21 +66,53 @@ Treat every candidate finding as suspect — but validate differently depending 
 
 Anchor every surviving finding to `file:line`.
 
-## 5. Assemble + get approval
+## 5. Assess human-review need
+
+Before presenting the final queue to the human, run one serial **Human Review Assessor** subagent. This is not another broad review pass and should not duplicate the concern-track agents. Its job is to help the human decide how much personal review is still warranted and where to spend attention.
+
+Give it:
+
+- MR title/description, target branch, author intent, draft state, reviewers, and CI status.
+- The authoritative GitLab diff summary, changed files, and touched subsystems.
+- Local commands/tests run, plus anything that could not be run and why.
+- Validated findings being considered for posting, including severity/confidence/suggested fixes.
+- Dropped findings, unresolved uncertainties, and any assumptions made during validation.
+- Known deployment, migration, backfill, manual-script, data-integrity, security/auth, permissions, queue/pipeline, env-var, docs-sync, and rollback implications.
+
+Ask it to return exactly:
+
+- **Human Review Need:** None / Light / Focused / Deep
+- **Risk Level:** Low / Medium / High
+- **Can Approve Without Human Code Read?:** Yes / No / Conditional
+- **Why:** 2-5 concrete bullets tied to MR facts
+- **Human Attention Areas:** files, flows, deployment steps, or questions worth inspecting
+- **Confidence:** Low / Medium / High
+
+Calibrate the labels this way:
+
+- **None:** comment/docs/test-only, no behavior or deployment risk, CI green, no meaningful unresolved uncertainty.
+- **Light:** small isolated code/model change, ordinary tests, no irreversible data, security, auth, or deployment concerns.
+- **Focused:** database migration, new API/contract, permissions/auth, queue/pipeline behavior, feature-flag or deployment sequencing, user-visible workflow, or data-correctness impact.
+- **Deep:** destructive migration, manual production script/backfill, production data rewrite, security boundary change, broad refactor, ambiguous intent, failing/missing CI, unclear rollback, or high-severity validated findings.
+
+Do not let this assessor post or approve anything. Include its assessment in the approval queue so the human can decide whether to skim, focus on specific areas, or deeply review before approving the agent's feedback.
+
+## 6. Assemble + get approval
 
 Present a queue, nothing posted yet:
 
 - **Blocking** / **Non-blocking** / **Dropped**, each with location, severity, confidence, and a suggested fix.
+- **Human Review Assessment** from step 5, including the recommended attention areas.
 - Get explicit human approval on wording before posting anything.
 
-## 6. Post — conventions
+## 7. Post — conventions
 
 - **Actionable feedback → inline, resolvable threads** anchored to the exact lines. Use **suggestion blocks** for concrete fixes (see recipes).
 - **Summary comment is for thanks / general framing / non-actionable context only** — never put action items there.
 - **Outcome:** leaving threads open + withholding approval is the "please address" signal. Approve only when satisfied. Don't submit a formal "request changes" unless the team actually uses it.
 - **Tone:** concise, question-framed, collaborative. Credit good work. Skip style nitpicks.
 
-## 7. Close the loop
+## 8. Close the loop
 
 - Detect replies: re-read discussions and filter to notes that aren't yours and aren't bots (see recipes). A background monitor can watch for replies/pushes.
 - **Reply inside the existing thread** (`…/discussions/<id>/notes`), not a new thread.
