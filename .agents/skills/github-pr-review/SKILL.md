@@ -45,8 +45,8 @@ The main agent is the review lead.
 
 - No GitHub comments or review submissions before explicit user approval.
 - One submission owner only. Never let multiple agents write to the same pending review.
-- Prefer inline comments only for line-specific feedback on changed code.
-- Put PR-wide themes, praise, or non-line-specific guidance in the final review summary.
+- Every actionable finding with a target file and line MUST be posted as an inline comment, even if the file is not in the diff. If it has a location, it goes inline — no exceptions.
+- The review summary is strictly for concerns with no line anchor: overall architecture themes, praise, cross-cutting observations. If you find yourself putting actionable feedback in the summary, move it to an inline comment instead.
 - If a concern is invalidated, do not surface it as GitHub feedback.
 - If a concern is weakened but still worth mentioning, keep the wording humble and narrow.
 
@@ -115,7 +115,7 @@ Cross-validation questions:
 - Is the reasoning grounded in codebase patterns or docs, not generic preference?
 - Is it blocking, important, or just nice-to-have?
 - Would we still say this if we fully understood the PR's intent?
-- Should this be an inline comment, a summary comment, or dropped entirely?
+- Does this finding have a target file and line? If yes, it must be an inline comment — not summary-only.
 
 The main agent should keep the surviving queue small and high-signal.
 
