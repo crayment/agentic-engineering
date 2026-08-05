@@ -1,0 +1,3 @@
+# Machine-local skills_doctor config: per-machine project list, never committed.
+# The committed skills_doctor.config.example.json documents the schema.
+scripts/skills_doctor.config.json

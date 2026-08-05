@@ -1,0 +1,12 @@
+{
+  "_README": "Copy this to skills_doctor.config.json (git-ignored, per-machine). 'projects' lists THIS machine's project repo roots (--full reads each project's skills-lock.json for provenance). 'mirrors' maps a skill name to the project roots it is vendored into; canonical is always the agentic-engineering (HOME) copy, and the doctor reports each mirror's sync status from anywhere + a resync command on drift. Declaring mirrors here (not in the script) keeps this public repo free of any specific private project. A leading ~ is expanded. No config is needed for the default per-repo report.",
+  "projects": [
+    "~/dev/some-project",
+    "~/dev/another-project"
+  ],
+  "mirrors": {
+    "some-shared-skill": [
+      "~/dev/some-project"
+    ]
+  }
+}

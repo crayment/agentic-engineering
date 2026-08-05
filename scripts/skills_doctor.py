@@ -29,7 +29,19 @@ Run from anywhere inside a repo:
     python3 scripts/skills_doctor.py /some/path    # scope report for a specific project dir
     python3 scripts/skills_doctor.py --json        # machine-readable scope report
     python3 scripts/skills_doctor.py --no-color    # plain text (auto-detected for non-ttys anyway)
-    python3 scripts/skills_doctor.py --full        # also dump cross-machine provenance/plugin detail
+    python3 scripts/skills_doctor.py --full        # also dump environment inventory + provenance
+
+`--full` additionally sweeps the consumer projects listed in a machine-local
+`skills_doctor.config.json` next to this script (git-ignored; copy the committed
+`skills_doctor.config.example.json` to create it). The default per-repo report
+needs no config.
+
+Vendored mirrors -- a skill kept in your HOME repo *and* committed into a
+project for a team -- are declared in that same config under
+`"mirrors": {"<skill>": ["<project_root>", ...]}`. The report then adds a
+MIRRORS section with each one's sync status against its canonical (HOME) copy
+and a resync command on drift. Declaring them in the git-ignored config keeps
+this public script free of any specific project.
 
 Stdlib only, no dependencies.
 """
@@ -43,6 +55,14 @@ from dataclasses import dataclass
 from pathlib import Path
 
 HOME = Path.home()
+
+# This script's own directory is the one fixed anchor we can rely on without an
+# env var or a hardcoded home path: a machine-local, git-ignored config file
+# lives right next to it. Only `--full` reads it -- for the list of consumer
+# projects to sweep, which differs per machine -- so the default per-repo report
+# needs no config at all.
+SCRIPT_DIR = Path(__file__).resolve().parent
+LOCAL_CONFIG_FILE = SCRIPT_DIR / "skills_doctor.config.json"
 
 # Repos where skills actually get authored -- used to label what a symlink
 # resolves back to (e.g. "agentic-engineering/git-worktree") and as the scan
@@ -62,7 +82,6 @@ LINKABLE_ROOTS = SOURCE_REPOS + [
 
 READONLY_ROOTS = [("cursor built-in", HOME / ".cursor/skills-cursor")]
 PLUGIN_CACHE_ROOT = HOME / ".cursor/plugins/cache"
-PROJECT_REPOS = [HOME / "dev/financial-vendor-data"]
 
 # `npx skills add` (https://github.com/vercel-labs/skills) writes a lockfile
 # recording exactly where an installed skill came from -- but that's the
@@ -121,12 +140,32 @@ def sha256_of(path: Path) -> str:
     return h.hexdigest()[:12]
 
 
+def hash_skill_dir(path: Path) -> str:
+    """Content hash of an entire skill directory (every file's relative path +
+    bytes), so a vendored copy and its canonical source can be compared whole --
+    not just their SKILL.md. Lets us tell an in-sync mirror from a drifted one."""
+    h = hashlib.sha256()
+    for f in sorted(p for p in path.rglob("*") if p.is_file()):
+        h.update(f.relative_to(path).as_posix().encode())
+        h.update(b"\0")
+        h.update(f.read_bytes())
+        h.update(b"\0")
+    return h.hexdigest()[:12]
+
+
 def find_project_root(start: Path) -> Path:
     cur = start.resolve()
     for p in [cur, *cur.parents]:
         if (p / ".git").exists():
             return p
     return cur
+
+
+def _within(child: Path, parent: Path) -> bool:
+    """True if child is parent or nested under it, so a git worktree counts as
+    being 'in' the project it belongs to."""
+    child, parent = child.resolve(), parent.resolve()
+    return child == parent or parent in child.parents
 
 
 def label_target(target: Path) -> str:
@@ -200,6 +239,11 @@ class Skill:
     sha_claude: str | None
     shadowed_by_project: bool = False
     shadows_home: bool = False
+    # Set only for a DECLARED vendored mirror in the current run (see main):
+    # HOME is canonical, the PROJECT copy is the committed-for-the-team mirror.
+    # None = not a declared mirror here.
+    mirror_in_sync: bool | None = None
+    mirror_resync_cmd: str | None = None   # rsync one-liner: canonical (HOME) -> mirror (PROJECT)
 
 
 def build_scope(root: Path) -> dict[str, Skill]:
@@ -285,9 +329,19 @@ def print_scope(C: Colors, label: str, root: Path, skills: dict[str, Skill], pro
         return warns, errors
     for name, sk in skills.items():
         status, msg = classify(sk)
-        if sk.shadowed_by_project:
+
+        mirror_suffix = ""
+        if sk.mirror_in_sync is not None:
+            # Declared vendored mirror: it's linked fine in this scope, so never
+            # turn it into a warning here -- sync status + resync are owned by
+            # the MIRRORS section below. Just point the reader there.
+            mirror_suffix = C.dim("  (vendored mirror -- see MIRRORS)")
+        elif sk.shadowed_by_project:
+            # same name in both scopes but NOT a declared mirror -- keep the
+            # plain shadow warning so accidental collisions still surface.
             status = "WARN" if status == "OK" else status
             msg = "shadowed by same-named PROJECT skill" if not msg else f"{msg}; shadowed by same-named PROJECT skill"
+
         if status == "WARN":
             warns += 1
         elif status == "ERROR":
@@ -301,9 +355,59 @@ def print_scope(C: Colors, label: str, root: Path, skills: dict[str, Skill], pro
             hint = status_color(C, status, hint)
         elif hint:
             hint = C.dim(f"<- {hint}")
-        shadow_note = C.dim("  (shadows home copy)") if sk.shadows_home else ""
-        print(f"  {glyph} {name_col} {loc_col} {hint}{shadow_note}")
+        legacy_shadow = C.dim("  (shadows home copy)") if (sk.shadows_home and sk.mirror_in_sync is None) else ""
+        print(f"  {glyph} {name_col} {loc_col} {hint}{mirror_suffix}{legacy_shadow}")
     return warns, errors
+
+
+def mirror_status(mirrors: dict[str, list[Path]], home_scope: dict[str, Skill], project_root: Path) -> list[dict]:
+    """For each DECLARED mirror, compare each project's copy against the
+    canonical HOME (agentic-engineering) copy. When you're standing inside a
+    declared project (or a worktree of it), that live checkout is compared.
+    Returns rows {skill, project, status, resync}; status is one of
+    in_sync / drifted / missing_project / missing_canonical."""
+    rows: list[dict] = []
+    for name in sorted(mirrors):
+        home_sk = home_scope.get(name)
+        canonical = home_sk.canonical.real_path if home_sk and home_sk.canonical else None
+        for p in mirrors[name]:
+            check_root = project_root if _within(project_root, p) else p
+            proj_skill = check_root / ".agents/skills" / name
+            if canonical is None:
+                status, resync = "missing_canonical", None
+            elif not (proj_skill / "SKILL.md").is_file():
+                status, resync = "missing_project", None
+            elif hash_skill_dir(proj_skill) == hash_skill_dir(canonical):
+                status, resync = "in_sync", None
+            else:
+                status = "drifted"
+                resync = f"rsync -a --delete {canonical}/ {proj_skill}/"
+            rows.append({"skill": name, "project": p.name, "status": status, "resync": resync})
+    return rows
+
+
+def print_mirror_registry(C: Colors, rows: list[dict]) -> int:
+    """Render the declared-mirror registry; return the warning count."""
+    if not rows:
+        return 0
+    print(C.bold("MIRRORS  (declared in skills_doctor.config.json; canonical = the agentic-engineering/HOME copy)"))
+    labels = {
+        "in_sync": ("OK", "in sync"),
+        "drifted": ("WARN", "DRIFTED from canonical"),
+        "missing_project": ("WARN", "declared but not vendored in this project yet"),
+        "missing_canonical": ("WARN", "canonical copy missing in agentic-engineering (HOME)"),
+    }
+    warns = 0
+    for r in rows:
+        st, text = labels[r["status"]]
+        if st != "OK":
+            warns += 1
+        head = f"{r['skill']} -> {r['project']}"
+        tail = C.dim(text) if st == "OK" else status_color(C, st, text)
+        print(f"  {status_color(C, st, GLYPH[st])} {head:<52} {tail}")
+        if r["resync"]:
+            print("      " + status_color(C, "WARN", f"resync: {r['resync']}"))
+    return warns
 
 
 def main() -> None:
@@ -323,14 +427,23 @@ def main() -> None:
 
     per_scope = {label: build_scope(root) for label, root in scopes}
 
+    mirrors = configured_mirrors()
     if not same:
-        project_names = set(per_scope["PROJECT"])
-        for name, sk in per_scope["HOME"].items():
-            if name in project_names:
-                sk.shadowed_by_project = True
-        for name, sk in per_scope["PROJECT"].items():
-            if name in per_scope["HOME"]:
-                sk.shadows_home = True
+        for name in set(per_scope["PROJECT"]) & set(per_scope["HOME"]):
+            proj = per_scope["PROJECT"][name]
+            home = per_scope["HOME"][name]
+            proj.shadows_home = True
+            home.shadowed_by_project = True
+            # Treat this as a vendored mirror ONLY if it's declared in
+            # skills_doctor.config.json AND the repo you're standing in (or a
+            # worktree of it) is one of that skill's declared homes -- so the
+            # "mirror" framing never fires on an unrelated same-name skill, or
+            # when you're standing in the canonical repo itself. HOME is
+            # canonical; the MIRRORS section owns sync status + resync.
+            if proj.canonical and home.canonical and any(_within(project_root, p) for p in mirrors.get(name, [])):
+                in_sync = hash_skill_dir(proj.canonical.real_path) == hash_skill_dir(home.canonical.real_path)
+                proj.mirror_in_sync = home.mirror_in_sync = in_sync
+                proj.mirror_resync_cmd = f"rsync -a --delete {home.canonical.real_path}/ {proj.canonical.real_path}/"
 
     global_prov: dict[str, dict] = {}
     for lockfile in GLOBAL_LOCKFILES:
@@ -351,6 +464,8 @@ def main() -> None:
                 "claude_path": str(sk.claude.path) if sk.claude else None,
                 "claude_is_symlink": sk.claude.is_symlink if sk.claude else None,
                 "shadowed_by_project": sk.shadowed_by_project,
+                "mirror_in_sync": sk.mirror_in_sync,
+                "mirror_resync_cmd": sk.mirror_resync_cmd,
             }
 
         out = {label: {name: skill_to_dict(sk) for name, sk in skills.items()} for label, skills in per_scope.items()}
@@ -365,6 +480,11 @@ def main() -> None:
         total_errors += e
         print()
 
+    mirror_rows = mirror_status(mirrors, per_scope["HOME"], project_root)
+    if mirror_rows:
+        total_warns += print_mirror_registry(C, mirror_rows)
+        print()
+
     total = sum(len(s) for s in per_scope.values())
     summary = f"{total} skills"
     if total_errors:
@@ -376,47 +496,17 @@ def main() -> None:
     print(summary)
 
     if full:
-        print_full_report()
+        print_full_report(project_root)
 
 
 # --------------------------------------------------------------------------
-# --full: cross-machine inventory (unscoped)
+# --full: environment inventory (global/built-in roots + configured projects)
 # --------------------------------------------------------------------------
 
-@dataclass
-class Instance:
-    root_label: str
-    path: Path
-    dir_is_symlink: bool
-    dir_symlink_target: Path | None
-    dev: int
-    ino: int
-    sha256: str
-
-    @property
-    def cluster_key(self) -> tuple[int, int]:
-        return (self.dev, self.ino)
-
-
-def scan_linkable_root(label: str, root: Path) -> dict[str, Instance]:
-    out: dict[str, Instance] = {}
+def skill_names_in_root(root: Path) -> set[str]:
     if not root.is_dir():
-        return out
-    for child in sorted(root.iterdir()):
-        skill_md = child / "SKILL.md"
-        if not skill_md.is_file():
-            continue
-        st = skill_md.stat()
-        out[child.name] = Instance(
-            root_label=label,
-            path=child,
-            dir_is_symlink=child.is_symlink(),
-            dir_symlink_target=child.resolve() if child.is_symlink() else None,
-            dev=st.st_dev,
-            ino=st.st_ino,
-            sha256=sha256_of(skill_md),
-        )
-    return out
+        return set()
+    return {child.name for child in root.iterdir() if (child / "SKILL.md").is_file()}
 
 
 def scan_readonly_root(root: Path) -> list[str]:
@@ -478,6 +568,39 @@ def parse_notes(path: Path) -> dict[str, dict]:
     return out
 
 
+def load_local_config() -> dict:
+    if not LOCAL_CONFIG_FILE.is_file():
+        return {}
+    try:
+        return json.loads(LOCAL_CONFIG_FILE.read_text())
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+def configured_projects() -> list[Path]:
+    """Consumer-project roots for `--full` to sweep for provenance, read from
+    the machine-local config next to this script. No config -> no extra
+    projects (just whatever repo you ran this in)."""
+    cfg = load_local_config()
+    return [Path(p).expanduser() for p in cfg.get("projects", []) if isinstance(p, str)]
+
+
+def configured_mirrors() -> dict[str, list[Path]]:
+    """Declared vendored mirrors from the machine-local config: skill name ->
+    the project roots it's vendored into. Canonical is always the HOME
+    (agentic-engineering) copy; this only records where copies are shipped for a
+    team. Kept in the git-ignored config so this public script never names a
+    specific private project. No config -> no mirrors."""
+    raw = load_local_config().get("mirrors", {})
+    if not isinstance(raw, dict):
+        return {}
+    out: dict[str, list[Path]] = {}
+    for name, projects in raw.items():
+        if isinstance(name, str) and isinstance(projects, list):
+            out[name] = [Path(p).expanduser() for p in projects if isinstance(p, str)]
+    return out
+
+
 def dedupe_aliased_roots(roots: list[tuple[str, Path]]) -> tuple[list[tuple[str, Path]], list[tuple[str, str, Path]]]:
     seen: dict[Path, str] = {}
     deduped: list[tuple[str, Path]] = []
@@ -492,15 +615,14 @@ def dedupe_aliased_roots(roots: list[tuple[str, Path]]) -> tuple[list[tuple[str,
     return deduped, aliases
 
 
-def print_full_report() -> None:
+def print_full_report(project_root: Path) -> None:
     print()
     print("#" * 70)
-    print("--full: CROSS-MACHINE INVENTORY (all configured roots, not scoped to cwd)")
+    print("--full: ENVIRONMENT INVENTORY (global/built-in roots + your projects)")
     print("#" * 70)
 
     active_roots, root_aliases = dedupe_aliased_roots(LINKABLE_ROOTS)
-    per_root = {label: scan_linkable_root(label, root) for label, root in active_roots}
-    all_names = sorted({name for instances in per_root.values() for name in instances})
+    all_names = sorted({n for _, root in active_roots for n in skill_names_in_root(root)})
 
     print()
     print("ALIASED ROOTS (same real directory, not two copies)")
@@ -521,18 +643,35 @@ def print_full_report() -> None:
 
     print()
     print("PROVENANCE (`.skill-lock.json` / `skills-lock.json` -- the only on-disk")
-    print("record of *how* a skill arrived, vs. being hand-placed)")
+    print("record of *how* a skill arrived, vs. being hand-placed). Projects come")
+    print("from skills_doctor.config.json (next to this script), plus the repo you")
+    print("ran this in.")
     global_provenance: dict[str, dict] = {}
     for lockfile in GLOBAL_LOCKFILES:
         global_provenance.update(parse_lockfile(lockfile))
-    project_provenance = {repo: parse_lockfile(repo / "skills-lock.json") for repo in PROJECT_REPOS}
-    if not global_provenance and not any(project_provenance.values()):
+
+    project_roots = list(configured_projects())
+    if project_root != HOME and project_root.resolve() not in {p.resolve() for p in project_roots}:
+        project_roots.append(project_root)
+
+    project_provs: list[tuple[str, dict]] = []
+    seen: set[Path] = set()
+    for repo in project_roots:
+        rp = repo.resolve()
+        if rp in seen:
+            continue
+        seen.add(rp)
+        prov = parse_lockfile(repo / "skills-lock.json")
+        if prov:
+            project_provs.append((repo.name, prov))
+
+    if not global_provenance and not project_provs:
         print("  (no lockfiles found)")
     for name, info in sorted(global_provenance.items()):
         print(f"  [global] {name:<28} <- {info['source']}  ({info['sourceUrl']})")
-    for repo, prov in project_provenance.items():
+    for label, prov in project_provs:
         for name, info in sorted(prov.items()):
-            print(f"  [{repo}] {name:<28} <- {info['source']}")
+            print(f"  [{label}] {name:<28} <- {info['source']}")
 
     print()
     print(f"names visible across all linkable roots: {len(all_names)}")
