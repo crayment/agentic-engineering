@@ -103,18 +103,26 @@ not your projects.
 
 1. Write `SKILL.md` (+ any supporting files) in the real location from the
    table above.
-2. Symlink it into every `.claude/skills/` that needs to see it:
-   - Same repo as the source: use a **relative** symlink, matching existing
-     siblings, e.g. `ln -s ../../.agents/skills/<name> .claude/skills/<name>`.
-   - Cross-repo (e.g. an agentic-engineering-authored skill needs to show up
-     at `~/.claude/skills/<name>`): use an **absolute** symlink straight to
-     the source, e.g.
-     `ln -s ~/dev/me/agentic-engineering/.agents/skills/<name> ~/.claude/skills/<name>`.
-   - Do this **individually per skill**. Never symlink a whole folder of
-     skills at once as a bulk "collection pointer" (e.g.
-     `.agents/skills/some-bundle -> other-repo/skills/`) -- it's invisible to
-     `.claude/skills` unless something is also individually linked there, and
-     `skills_doctor.py` (below) flags it as a warning.
+2. Link it into the harness skill dirs so it loads. A `.claude/skills/<name>`
+   entry is always a **symlink to the nearest `.agents/skills/<name>`**, and a
+   harness may read either dir -- so a HOME-scope skill has to be reachable from
+   both `~/.agents/skills` and `~/.claude/skills`.
+   - **Same repo (relative):** a project or dotfiles-native skill, where
+     `.claude` and `.agents` share a tree:
+     `ln -s ../../.agents/skills/<name> .claude/skills/<name>`.
+   - **HOME-scope agentic-engineering skill -- two links, and commit one:** its
+     real files live in another repo, and `~/.agents` -> `dotfiles/agents`, so
+     `~/.agents/skills` is itself a harness dir *inside your dotfiles repo*.
+     Create **both** as absolute symlinks to the agentic-engineering copy:
+     - `~/dev/me/dotfiles/agents/skills/<name>` (this is `~/.agents/skills/<name>`)
+       -- **commit it in dotfiles**. An untracked link won't survive a
+       `git clean` and won't reach your other machine.
+     - `~/.claude/skills/<name>`.
+     `skills_doctor.py` checks for both; a missing `~/.agents` link shows as
+     `claude only -- no .agents source`.
+   - Do it **individually per skill** -- never a bulk "collection pointer"
+     (`.agents/skills/some-bundle -> other-repo/skills/`), which `.claude` won't
+     see and `skills_doctor.py` flags as a warning.
 3. Verify: `python3 ~/dev/me/agentic-engineering/scripts/skills_doctor.py [project_path]`.
    The new skill should show `\u2713 agents+claude` with no warning. Fix anything
    that shows `\u26a0`/`\u2717` before considering the install done.
