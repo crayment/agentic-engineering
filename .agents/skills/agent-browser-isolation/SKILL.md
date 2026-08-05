@@ -159,6 +159,31 @@ is expected, not a problem. If the banner is missing, or `page_info()`/
 - If it can't connect, the browser probably isn't running — run
   `agent-browser.sh ensure` (or `restart`) and retry.
 
+## Driving the user's MAIN Chrome instead (only when explicitly asked)
+
+Everything above attaches to the dedicated **agent** browser. When the user
+**explicitly** asks you to act in their **own/main** Chrome (e.g. "log me in on
+my main Chrome"), the split is simple — and needs no port-hunting:
+
+| Target | Attach with | Verify you're on it |
+|---|---|---|
+| **User's main Chrome** | plain `browser-use` — the **default daemon** (no `BU_CDP_URL` / no `abu.sh`) | `list_tabs()` shows the user's real tabs (many, their own sites) |
+| **Isolated agent browser** | `abu.sh` (sets `BU_CDP_URL` to this browser's endpoint) | `list_tabs()` shows only the handful of tabs agents opened |
+
+- **Verify by tab-set, never by curling the debug port.** A Chrome debug
+  endpoint's `/json` HTTP can return **empty even when CDP works fine** (seen on
+  the default profile), so `curl http://127.0.0.1:<port>/json/version` is an
+  unreliable probe. Attach with `browser-use` and read `list_tabs()` /
+  `current_tab()` instead.
+- **Don't hardcode a debug port** (9222, …) for the main Chrome — the default
+  daemon finds it. If it can't attach (no remote debugging that session), that's
+  the `browser-use` "enable remote debugging" path (`chrome://inspect`), a
+  **human** step — do **not** silently fall back to the agent browser, which is
+  the wrong browser for the request.
+- Tab-ownership discipline still applies (own one tab; never close the user's
+  other tabs) — and it matters **more** here, since the main Chrome is full of
+  the user's real tabs.
+
 ## Own one tab by its id (don't spawn new tabs)
 
 `new_tab(url)` returns a **stable `targetId`** (a GUID). That id does **not**
