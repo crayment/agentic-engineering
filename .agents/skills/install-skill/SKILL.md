@@ -10,6 +10,23 @@ This is about **where a skill's files physically live** and how they're linked
 `create-skill` instead; use this skill after you've drafted the content, or
 whenever you're placing/moving a skill that already exists.
 
+## REQUIRED — read the Agent Skills spec first
+
+**Before authoring or restructuring any skill** (new `SKILL.md`, adding
+`references/`, splitting roles, etc.), the agent **must** read the current
+[Agent Skills specification](https://agentskills.io/specification).
+
+Do not invent layout conventions. Follow the spec, especially:
+
+- Directory shape: `SKILL.md` + optional `scripts/`, **`references/`**, `assets/`
+- Progressive disclosure: keep `SKILL.md` lean; put role/domain detail in
+  `references/` and link it from `SKILL.md` (one level deep)
+- `name` / `description` frontmatter rules
+
+`create-skill` helps with prose/structure; **the spec is the source of truth**
+for what a skill is allowed to look like. If this skill and the spec disagree,
+follow the spec.
+
 ## The model
 
 Every place skills can live is a **scope**: the current project (nearest
@@ -101,8 +118,9 @@ not your projects.
 
 ## Steps
 
-1. Write `SKILL.md` (+ any supporting files) in the real location from the
-   table above.
+1. **Read the [Agent Skills spec](https://agentskills.io/specification)** (see
+   above). Then write `SKILL.md` (+ optional `references/`, `scripts/`,
+   `assets/`) in the real location from the table above.
 2. Link it into the harness skill dirs so it loads. A `.claude/skills/<name>`
    entry is always a **symlink to the nearest `.agents/skills/<name>`**, and a
    harness may read either dir -- so a HOME-scope skill has to be reachable from
