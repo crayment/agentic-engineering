@@ -51,6 +51,15 @@ Split the review into independent concern-tracks sized to the MR (e.g. correctne
 - Judge against the repo's **committed** standards where they exist (`CLAUDE.md`, `.claude/rules/`, `CONTRIBUTING`, `docs/`). Never treat uncommitted or personal scratch as authoritative.
 - Right-size: a small MR needs one or two agents, not a fleet.
 
+**Always-on — Comment & docstring quality track (run on every MR, regardless of size).** In addition to the concern-tracks above, always delegate one subagent to review *every added or changed code comment and docstring in the diff*. Its mandate: each comment must **earn its long-term place in the repo** — high signal-to-noise, while the surrounding code still reads naturally. Flag a comment when it:
+- narrates what the code plainly does ("increment the counter", "loop over rows") instead of explaining the non-obvious *why* / intent / trade-off / constraint;
+- restates a name or type signature, or just repeats the adjacent commit message;
+- is doomed to go stale — references transient state ("new", "now", "for now", "recently", an in-flight ticket) or a specific line/section that will drift;
+- is commented-out code, a TODO with no tracking reference, or leftover scaffolding;
+- runs multi-line where the repo's convention wants one (honor the project's comment/docstring rules, e.g. `CLAUDE.md`, `.claude/rules/`).
+
+For each, propose the concrete fix — usually **delete**, or **tighten to the one high-signal sentence** a future reader genuinely needs. The goal is signal-to-noise, **not** a comment-free codebase: keep the intent/trade-off comments that make the code navigable, and don't rewrite comments into stilted prose. These findings are validated (step 4) and queued (step 6) like any other; most land as **Non-blocking** suggestions unless a comment is actively misleading.
+
 ## 4. Validate before believing
 
 Treat every candidate finding as suspect — but validate differently depending on what kind of claim it is.
@@ -103,6 +112,11 @@ Present a queue, nothing posted yet:
 
 - **Blocking** / **Non-blocking** / **Dropped**, each with location, severity, confidence, and a suggested fix.
 - **Human Review Assessment** from step 5, including the recommended attention areas.
+- **Plain-language roll-up (always).** The human deciding on this MR context-switches all day and has not read the diff or the review threads. So for **every** finding, alongside the technical location, give an accessible roll-up they can grok cold:
+  - **The actual scenario** — for anything non-obvious (a race, a state bug, an edge case), walk a concrete worked example ("open company A → send → switch to B without reloading → 409"), not just the abstract mechanism; spell out *how it happens*.
+  - **Why it matters** — the real-world impact and how reachable it is today (e.g. "data-safe, and latent until an in-app company switcher exists").
+  - **What to do** — the recommended action, in one line.
+  Then close with a **one-paragraph bottom line**: is it mergeable, and the single most important thing to know. Write for a smart engineer seeing the change for the first time — no jargon dumps, no assumed context.
 - Get explicit human approval on wording before posting anything.
 
 ## 7. Post — conventions
