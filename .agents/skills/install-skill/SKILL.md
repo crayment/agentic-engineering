@@ -70,6 +70,17 @@ When in doubt between the two HOME repos, prefer `dotfiles` -- it's easy to
 promote a proven skill from private dotfiles to public agentic-engineering
 later, but you can't un-publish something git history has already exposed.
 
+### Lifecycle (default)
+
+1. **Birth** — author real files in private `dotfiles/agents/skills/<name>/`.
+2. **Use** — link into harness dirs (Steps below); iterate in private.
+3. **Promote** when happy — move/copy canonical files to AE (public, generic)
+   or into a project (e.g. team repo). For AE: leave a committed symlink in
+   `dotfiles/agents/skills/<name>` → AE so HOME scope still loads; update
+   `.skill-notes.json` / any catalog that claimed "dotfiles" as the edit home.
+4. **Never assume** a path under the dotfiles *tree* is private content —
+   `readlink` first; many public skills are symlinks into AE.
+
 ## A skill in two places: the vendored mirror (personal + team)
 
 Sometimes one skill genuinely needs two homes: it's generic enough to want on
