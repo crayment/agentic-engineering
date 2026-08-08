@@ -38,6 +38,17 @@ Splitting this into `git checkout -b` followed by `git worktree add` creates the
 
 When using file editing tools inside a worktree, always use absolute paths. Run `pwd` first if you're unsure of your current worktree path.
 
+## Bootstrapping a new worktree
+
+A worktree only checks out **tracked** files. Everything git ignores — `.env` and other local config, installed dependencies (`node_modules`, `.venv`, …), TLS certs, build caches — is **absent** from a fresh worktree, so builds and tests frequently fail there until you set it up. This trips up agents that assume a worktree is a drop-in copy of the main clone.
+
+Before building or testing in a new worktree, get it ready:
+
+- **Look for a repo-provided bootstrap step and run it.** Many repos ship one — a setup script (e.g. `scripts/setup-worktree.sh`), a `make bootstrap` / `make setup` target, or a documented step in the README or agent docs (`CLAUDE.md`/`AGENTS.md`). Prefer it over improvising: it encodes exactly what that project needs.
+- **Otherwise, provision the essentials yourself:** install dependencies and bring over the gitignored local config the project needs. Prefer **relative symlinks back to the main clone** over re-installing/re-copying when nothing changed — it's instant, keeps one source of truth, and avoids duplicating secrets. (Re-install only when this branch actually changed dependencies.)
+
+If setup is non-trivial and the repo has no bootstrap step, that's a strong signal to add one — mention it to the user.
+
 ## Working in the Worktree
 
 Once inside the worktree directory, all normal git operations work as expected — `git add`, `git commit`, `git push`, etc. Just stay in the worktree directory.
