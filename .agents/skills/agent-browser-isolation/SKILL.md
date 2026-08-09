@@ -170,11 +170,20 @@ my main Chrome"), the split is simple — and needs no port-hunting:
 | **User's main Chrome** | plain `browser-use` — the **default daemon** (no `BU_CDP_URL` / no `abu.sh`) | `list_tabs()` shows the user's real tabs (many, their own sites) |
 | **Isolated agent browser** | `abu.sh` (sets `BU_CDP_URL` to this browser's endpoint) | `list_tabs()` shows only the handful of tabs agents opened |
 
+- **Unset agent-browser env when switching to main Chrome.** An earlier
+  `export BU_NAME=…` / `BU_CDP_URL=…` from an agent-browser phase **leaks**:
+  plain `browser-use` will reconnect to that named daemon (often still on the
+  agent browser) instead of the default/main daemon. Call main-Chrome work with
+  both cleared, e.g. `env -u BU_NAME -u BU_CDP_URL browser-use …` (or an explicit
+  main-Chrome `BU_NAME` you verified by tab-set). Unsetting only `BU_CDP_URL` is
+  not enough if `BU_NAME` still points at the agent daemon.
 - **Verify by tab-set, never by curling the debug port.** A Chrome debug
   endpoint's `/json` HTTP can return **empty even when CDP works fine** (seen on
   the default profile), so `curl http://127.0.0.1:<port>/json/version` is an
   unreliable probe. Attach with `browser-use` and read `list_tabs()` /
-  `current_tab()` instead.
+  `current_tab()` instead. Multiple daemons may already be attached to the same
+  main Chrome (`--doctor`); reuse a descriptive existing handle (e.g. `cody-main`)
+  that already sees the real tab set rather than minting a new one.
 - **Don't hardcode a debug port** (9222, …) for the main Chrome — the default
   daemon finds it. If it can't attach (no remote debugging that session), that's
   the `browser-use` "enable remote debugging" path (`chrome://inspect`), a
