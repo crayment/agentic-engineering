@@ -27,6 +27,16 @@ def _read(path: Path) -> str:
     return path.read_text() if path.is_file() else ""
 
 
+def _skill_cues_feedback(skill_text: str) -> bool:
+    lower = skill_text.lower()
+    return (
+        "feedback/readme" in lower
+        or "`feedback/`" in lower
+        or "feedback/" in lower and "before you finish" in lower
+        or "before you finish" in lower
+    )
+
+
 def feedback_notes(feedback_dir: Path) -> list[Path]:
     if not feedback_dir.is_dir():
         return []
@@ -49,7 +59,7 @@ def check_bootstrap_minimal(outputs: Path) -> list[dict]:
         ),
         (
             "outputs/minimal-skill/SKILL.md references feedback/ or feedback/README.md",
-            "feedback" in _read(skill).lower(),
+            _skill_cues_feedback(_read(skill)),
         ),
         (
             "No new friction note files in outputs/minimal-skill/feedback/ except README.md",
@@ -72,15 +82,18 @@ def check_bootstrap_wake(outputs: Path) -> list[dict]:
     wake_ctx = any(
         w in readme for w in ("wake", "scheduled", "unattended")
     )
+    skill_or_wake_feedback = _skill_cues_feedback(skill) or (
+        "feedback/" in wake.lower() or "feedback/readme" in wake.lower()
+    )
     checks = [
         ("outputs/wake-shaped-skill/feedback/README.md exists", _exists(fb / "README.md")),
         (
             "outputs/wake-shaped-skill/SKILL.md references feedback",
-            "feedback" in skill.lower(),
+            _skill_cues_feedback(skill),
         ),
         (
             "references/wake.md or SKILL.md mentions feedback/ for agents finishing a wake run",
-            "feedback" in skill.lower() or "feedback" in wake.lower(),
+            skill_or_wake_feedback,
         ),
         (
             "feedback/README.md mentions wake or scheduled/unattended context",

@@ -22,8 +22,10 @@ From agentic-engineering repo root:
 SKILL=./.agents/skills/meta-skill-feedback
 PAC=~/dev/me/dotfiles/agents/skills/provider-agnostic-skill-creator
 WS=./meta-skill-feedback-workspace/iteration-1
-EVAL=bootstrap-minimal
+EVAL=eval-bootstrap-minimal
 ```
+
+PAC expects eval directories named `eval-*` (e.g. `eval-bootstrap-minimal/`).
 
 1. **Orchestrator** creates `$WS/$EVAL/with_skill/` and `$WS/$EVAL/without_skill/`.
 2. **Executor workers** (parallel when possible):
