@@ -28,20 +28,32 @@ discover something, or a near-miss happened.*
 
 ## Bootstrap workflow
 
-1. Read [references/convention.md](references/convention.md) — naming, folders, body template.
-2. Confirm the **target skill path** (real `.agents/skills/<name>/`, not a symlink leaf only).
-3. Run the scaffold (preferred) or create dirs by hand:
+Read the target skill first. Adapt layout and cues to **how that skill actually
+works** — scheduled wake, interactive triage, one-shot CLI, etc. The convention
+is fixed; the wiring is not.
 
-```bash
-python3 scripts/scaffold.py /path/to/skill-name [--patch-skill]
-```
+1. Read [references/convention.md](references/convention.md) and
+   [references/bootstrap.md](references/bootstrap.md).
+2. Resolve the **real source path** (`install-skill` — edit the canonical
+   `.agents/skills/<name>/`, not a harness symlink only).
+3. **Create the inbox** under the target skill:
+   - `feedback/resolved/` (empty archive folder)
+   - `feedback/README.md` — agent-facing instructions; start from the template in
+     bootstrap.md and trim or extend for this skill (e.g. mention wake prompts,
+     Obsidian paths, or task outputs that are *not* feedback)
+4. **Cue future agents** — at most two touchpoints; see
+   [references/cue-points.md](references/cue-points.md):
+   - Required: **Before you finish** (or equivalent) near the end of `SKILL.md`
+   - Optional: one extra hook where this skill's agents actually finish (e.g.
+     `references/wake.md`, embedded wake prompt, error-recovery section)
+   Match the target skill's voice and section names; do not paste boilerplate
+   blindly if Iron laws or a final-report step already exists — extend those.
+5. **Verify** by reading back: an agent finishing a routine run sees where to
+   write friction; an agent on a quiet run knows to skip.
+6. Summarize for Cody what you added and where. Do **not** seed example friction
+   files unless this bootstrap run itself hit friction worth recording.
 
-4. If the skill has a wake prompt or `references/wake.md`, add one line per
-   [references/cue-points.md](references/cue-points.md).
-5. Verify: `feedback/README.md` exists, `feedback/resolved/` exists, target
-   `SKILL.md` has a **Before you finish** block (when `--patch-skill` used).
-6. Tell Cody what was added. Do **not** write sample friction files unless this
-   bootstrap run itself hit friction worth recording.
+Use normal file tools (`mkdir`, write, search/replace). No scaffold script.
 
 ## Runtime (agents using a skill that already has feedback/)
 
@@ -59,18 +71,19 @@ Skip when the run was routine and nothing misled you.
 This skill lives in public **agentic-engineering**. Friction files agents write
 in **any** skill may be committed. Entries must stay **generic** — no company
 names, secrets, tokens, or customer data. For skills that cannot tolerate public
-friction history, gitignore `feedback/*.md` in that skill (keep `README.md` and
-`resolved/.gitkeep` tracked) — document that in the skill's own README.
+friction history, gitignore `feedback/*.md` in that skill (keep `feedback/README.md`
+tracked) — document that in the skill's own README.
 
 ## Review (Cody)
 
 See [references/review.md](references/review.md) — sweep open files, brief,
-edit skill, `git mv` to `resolved/`.
+edit skill, move notes to `resolved/`.
 
 ## References
 
 | File | Purpose |
 |------|---------|
-| [references/convention.md](references/convention.md) | Folder layout, filenames, file body |
+| [references/convention.md](references/convention.md) | Folder layout, filenames, note body |
+| [references/bootstrap.md](references/bootstrap.md) | What to create, README starter, adaptation |
 | [references/cue-points.md](references/cue-points.md) | Where to patch target skills |
 | [references/review.md](references/review.md) | Review and resolve workflow |

@@ -60,9 +60,10 @@ Heading slots (omit unknowns, don't invent):
 | role/title | `inbox-auto`, `link-dump drain` |
 | machine | `birdhouse-mac-mini`, `Cody's MacBook Pro 2021` |
 
-## feedback/README.md (copy for scaffold)
+## feedback/README.md (starter content)
 
-Agents read this when writing a note. Keep it short:
+See [bootstrap.md](bootstrap.md) for a copy-paste starter. Agents read this when
+writing a note. Keep it short:
 
 - One topic per file
 - Write only after non-routine friction
@@ -70,6 +71,7 @@ Agents read this when writing a note. Keep it short:
 - No secrets, tokens, passwords, full email bodies
 - Do not edit the skill — leave notes here
 - Resolved notes live in `resolved/` (Cody moves them)
+- Skill-specific "not feedback" routes as needed
 
 ## Not feedback
 

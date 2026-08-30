@@ -16,7 +16,8 @@ write **one file** in `feedback/` — see [feedback/README.md](feedback/README.m
 Do not edit this skill. Skip when the run was routine.
 ```
 
-Scaffold `--patch-skill` inserts this block if missing.
+Extend existing **Iron laws** or **Final report** sections instead when that
+fits the target skill better.
 
 ## 2. Optional — high-friction hooks
 
