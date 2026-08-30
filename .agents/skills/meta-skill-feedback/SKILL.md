@@ -87,3 +87,4 @@ edit skill, move notes to `resolved/`.
 | [references/bootstrap.md](references/bootstrap.md) | What to create, README starter, adaptation |
 | [references/cue-points.md](references/cue-points.md) | Where to patch target skills |
 | [references/review.md](references/review.md) | Review and resolve workflow |
+| [references/evals.md](references/evals.md) | PAC eval harness (v0 fixtures) |
