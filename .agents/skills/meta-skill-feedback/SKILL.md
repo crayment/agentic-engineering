@@ -31,8 +31,9 @@ discover something, or a near-miss happened.*
 Cody’s typical ask: *“Use **meta-skill-feedback** to add a feedback system to &lt;target-skill&gt;.”* Load this skill first, then work on the target skill’s tree.
 
 Read the target skill first. Adapt layout and cues to **how that skill actually
-works** — scheduled wake, interactive triage, one-shot CLI, etc. The convention
-is fixed; the wiring is not.
+works** — interactive triage, one-shot CLI, wiki-backed rules, etc. The convention
+is fixed; the wiring is not. **My Machines wake contracts** (`wake.md`, `wake.sh`)
+are a separate system — do not create or patch them from this skill.
 
 1. Read [references/convention.md](references/convention.md) and
    [references/bootstrap.md](references/bootstrap.md).
@@ -41,13 +42,11 @@ is fixed; the wiring is not.
 3. **Create the inbox** under the target skill:
    - `feedback/resolved/` (empty archive folder)
    - `feedback/README.md` — agent-facing instructions; start from the template in
-     bootstrap.md and trim or extend for this skill (e.g. mention wake prompts,
-     Obsidian paths, or task outputs that are *not* feedback)
-4. **Cue future agents** — at most two touchpoints; see
+     bootstrap.md and trim or extend for this skill (e.g. Obsidian paths or task
+     outputs that are *not* feedback)
+4. **Cue future agents** — one touchpoint in `SKILL.md`; see
    [references/cue-points.md](references/cue-points.md):
    - Required: **Before you finish** (or equivalent) near the end of `SKILL.md`
-   - Optional: one extra hook where this skill's agents actually finish (e.g.
-     `references/wake.md`, embedded wake prompt, error-recovery section)
    Match the target skill's voice and section names; do not paste boilerplate
    blindly if Iron laws or a final-report step already exists — extend those.
 5. **Verify** by reading back: an agent finishing a routine run sees where to

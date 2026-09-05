@@ -2,10 +2,14 @@
 
 You are wiring a **runtime friction inbox** onto an **existing target skill**.
 Cody’s ask is usually explicit: use the **meta-skill-feedback** skill to add a
-feedback system to `<target-skill>` (e.g. email-inbox-agent). Load meta-skill-feedback
-first; do not bootstrap from memory alone.
+feedback system to `<target-skill>` (e.g. a CLI helper or triage skill). Load
+meta-skill-feedback first; do not bootstrap from memory alone.
 
-Use judgment; adapt names, sections, and extra cues to that skill's shape.
+Use judgment; adapt names, sections, and cues to that skill's shape.
+
+**Out of scope:** My Machines wake contracts (`references/wake.md`, `wake.sh`
+prompts). Those belong to the wake / scheduling system. If Cody wants feedback
+cues on unattended runs, he patches wake separately — not via this meta-skill.
 
 ## Minimum deliverables
 
@@ -14,9 +18,6 @@ Use judgment; adapt names, sections, and extra cues to that skill's shape.
 | `feedback/resolved/` | Archive after Cody reviews (may stay empty) |
 | `feedback/README.md` | Instructions for agents *using* this skill |
 | Cue in target `SKILL.md` | So agents see the path before they finish |
-
-Optional: one extra cue in `references/wake.md`, wake prompt string, or similar —
-only if this skill has a clear "finish line" away from `SKILL.md`.
 
 ## feedback/README.md — starter template
 
@@ -60,7 +61,6 @@ Smallest skill change that would help. Do not apply it yourself.
 
 | Shape | Typical extra work |
 |-------|-------------------|
-| **Scheduled wake** (My Machines) | One line in `references/wake.md` + wake prompt if embedded in `wake.sh` |
 | **Wiki + skill** (external Obsidian rules) | In README: "wiki wrong → feedback; rule proposals → `<audit path>`" |
 | **Interactive triage** | Cue in final-report / batch-complete section, not mid-workflow |
 | **Public AE skill** | README note: entries must stay generic; optional gitignore for `feedback/*.md` |
@@ -75,5 +75,6 @@ add feedback there instead of a redundant **Before you finish** — one pointer 
 
 - Run a one-size-fits-all script that blind-patches every skill the same way
 - Add cues in every reference file
+- Create or patch `wake.md` / wake prompts (separate system)
 - Create friction files as part of bootstrap (unless you hit real friction)
 - Replace task-specific outputs (proposals, Slack reports) with feedback files

@@ -73,44 +73,10 @@ def check_bootstrap_minimal(outputs: Path) -> list[dict]:
     return [{"text": t, "passed": p} for t, p in checks]
 
 
-def check_bootstrap_wake(outputs: Path) -> list[dict]:
-    target = outputs / "wake-shaped-skill"
-    fb = target / "feedback"
-    skill = _read(target / "SKILL.md")
-    wake = _read(target / "references" / "wake.md")
-    readme = _read(fb / "README.md").lower()
-    wake_ctx = any(
-        w in readme for w in ("wake", "scheduled", "unattended")
-    )
-    skill_or_wake_feedback = _skill_cues_feedback(skill) or (
-        "feedback/" in wake.lower() or "feedback/readme" in wake.lower()
-    )
-    checks = [
-        ("outputs/wake-shaped-skill/feedback/README.md exists", _exists(fb / "README.md")),
-        (
-            "outputs/wake-shaped-skill/SKILL.md references feedback",
-            _skill_cues_feedback(skill),
-        ),
-        (
-            "references/wake.md or SKILL.md mentions feedback/ for agents finishing a wake run",
-            skill_or_wake_feedback,
-        ),
-        (
-            "feedback/README.md mentions wake or scheduled/unattended context",
-            wake_ctx,
-        ),
-        (
-            "No friction note files seeded except README.md",
-            len(feedback_notes(fb)) == 0,
-        ),
-    ]
-    return [{"text": t, "passed": p} for t, p in checks]
-
-
 def check_runtime_quiet(outputs: Path, fixture_root: Path) -> list[dict]:
-    target = outputs / "wake-shaped-bootstrapped"
+    target = outputs / "minimal-bootstrapped"
     fb = target / "feedback"
-    fixture_skill = fixture_root / "wake-shaped-bootstrapped" / "SKILL.md"
+    fixture_skill = fixture_root / "minimal-bootstrapped" / "SKILL.md"
     out_skill = target / "SKILL.md"
     notes = feedback_notes(fb)
     ts_notes = [p for p in notes if TIMESTAMP_NOTE.search(str(p.relative_to(target)))]
@@ -121,11 +87,11 @@ def check_runtime_quiet(outputs: Path, fixture_root: Path) -> list[dict]:
     )
     checks = [
         (
-            "No new files matching outputs/wake-shaped-bootstrapped/feedback/YYYY-MM-DDTHHMM-*.md",
+            "No new files matching outputs/minimal-bootstrapped/feedback/YYYY-MM-DDTHHMM-*.md",
             len(ts_notes) == 0,
         ),
         (
-            "outputs/wake-shaped-bootstrapped/SKILL.md was not modified from the fixture copy",
+            "outputs/minimal-bootstrapped/SKILL.md was not modified from the fixture copy",
             skill_unchanged,
         ),
         (
@@ -136,10 +102,49 @@ def check_runtime_quiet(outputs: Path, fixture_root: Path) -> list[dict]:
     return [{"text": t, "passed": p} for t, p in checks]
 
 
+def check_runtime_friction(outputs: Path, fixture_root: Path) -> list[dict]:
+    target = outputs / "trap-skill"
+    fb = target / "feedback"
+    fixture_skill = fixture_root / "trap-skill" / "SKILL.md"
+    out_skill = target / "SKILL.md"
+    notes = feedback_notes(fb)
+    ts_notes = [p for p in notes if TIMESTAMP_NOTE.search(str(p.relative_to(target)))]
+    note_text = "\n".join(_read(p) for p in ts_notes).lower()
+    path_mentioned = any(
+        s in note_text
+        for s in ("data/project", "inputs/project", "wrong path", "misleading")
+    )
+    has_what_happened = "what happened" in note_text
+    skill_unchanged = (
+        _exists(fixture_skill)
+        and _exists(out_skill)
+        and _read(fixture_skill) == _read(out_skill)
+    )
+    checks = [
+        (
+            "Exactly one new friction note matching outputs/trap-skill/feedback/YYYY-MM-DDTHHMM-*.md",
+            len(ts_notes) == 1,
+        ),
+        (
+            "Friction note mentions the wrong or correct path (data/project or inputs/project)",
+            path_mentioned,
+        ),
+        (
+            "Friction note has a What happened section",
+            has_what_happened,
+        ),
+        (
+            "outputs/trap-skill/SKILL.md was not modified from the fixture copy",
+            skill_unchanged,
+        ),
+    ]
+    return [{"text": t, "passed": p} for t, p in checks]
+
+
 CHECKERS = {
     "bootstrap-minimal": check_bootstrap_minimal,
-    "bootstrap-wake-shaped": check_bootstrap_wake,
     "runtime-quiet": check_runtime_quiet,
+    "runtime-friction": check_runtime_friction,
 }
 
 
@@ -151,14 +156,18 @@ def main() -> None:
         "--fixture-root",
         type=Path,
         default=None,
-        help="evals/fixtures path (required for runtime-quiet)",
+        help="evals/fixtures path (required for runtime-* evals)",
     )
     args = parser.parse_args()
     outputs = args.outputs.resolve()
-    if args.eval == "runtime-quiet":
+    if args.eval in ("runtime-quiet", "runtime-friction"):
         if not args.fixture_root:
-            raise SystemExit("--fixture-root required for runtime-quiet")
-        results = check_runtime_quiet(outputs, args.fixture_root.resolve())
+            raise SystemExit("--fixture-root required for runtime evals")
+        fixture_root = args.fixture_root.resolve()
+        if args.eval == "runtime-quiet":
+            results = check_runtime_quiet(outputs, fixture_root)
+        else:
+            results = check_runtime_friction(outputs, fixture_root)
     else:
         results = CHECKERS[args.eval](outputs)
     summary = {

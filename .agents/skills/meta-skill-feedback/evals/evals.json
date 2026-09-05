@@ -4,7 +4,7 @@
     {
       "id": 1,
       "name": "bootstrap-minimal",
-      "prompt": "Add a runtime friction-feedback inbox to the target skill using meta-skill-feedback.\n\nTarget (copy — do not edit the fixture under evals/): work inside your outputs directory.\n\n1. Copy `evals/fixtures/minimal-skill/` to `outputs/minimal-skill/`.\n2. Bootstrap feedback on `outputs/minimal-skill/` per meta-skill-feedback (feedback/, README, cues in SKILL.md).\n3. Write `outputs/metrics.json` with `{ \"eval\": \"bootstrap-minimal\", \"target\": \"outputs/minimal-skill\" }`.\n4. Write `transcript.md` summarizing steps.\n\nDo not seed example friction notes unless you hit real friction during this task.",
+      "prompt": "Add a runtime friction-feedback inbox to the target skill using meta-skill-feedback.\n\nTarget (copy — do not edit the fixture under evals/): work inside your outputs directory.\n\n1. Copy `evals/fixtures/minimal-skill/` to `outputs/minimal-skill/`.\n2. Bootstrap feedback on `outputs/minimal-skill/` per meta-skill-feedback (feedback/, README, cue in SKILL.md only).\n3. Write `outputs/metrics.json` with `{ \"eval\": \"bootstrap-minimal\", \"target\": \"outputs/minimal-skill\" }`.\n4. Write `transcript.md` summarizing steps.\n\nDo not seed example friction notes unless you hit real friction during this task.",
       "expected_output": "outputs/minimal-skill/ has feedback/README.md, feedback/resolved/, and SKILL.md cues agents to write friction files. No scaffold script added.",
       "files": ["evals/fixtures/minimal-skill/SKILL.md"],
       "expectations": [
@@ -17,31 +17,30 @@
     },
     {
       "id": 2,
-      "name": "bootstrap-wake-shaped",
-      "prompt": "Add a runtime friction-feedback inbox to the wake-shaped fixture using meta-skill-feedback.\n\n1. Copy `evals/fixtures/wake-shaped-skill/` to `outputs/wake-shaped-skill/`.\n2. Bootstrap feedback; this skill has references/wake.md — add an appropriate finish-line cue there or in SKILL.md (at most two touchpoints total).\n3. Adapt feedback/README.md for scheduled-wake context.\n4. Write metrics.json and transcript.md as in bootstrap-minimal.",
-      "expected_output": "Wake-shaped skill bootstrapped with feedback inbox and wake-appropriate cues.",
-      "files": [
-        "evals/fixtures/wake-shaped-skill/SKILL.md",
-        "evals/fixtures/wake-shaped-skill/references/wake.md"
-      ],
+      "name": "runtime-quiet",
+      "prompt": "Simulate a **routine quiet run** of an already-bootstrapped skill.\n\nThe fixture `evals/fixtures/minimal-bootstrapped/` already has feedback/ set up.\n\n1. Copy it to `outputs/minimal-bootstrapped/` (do not modify evals/fixtures).\n2. Read feedback/README.md. You had a routine successful run with no surprises.\n3. Follow the runtime rules: **do not** write a friction file; **do not** edit SKILL.md.\n4. Write metrics.json and transcript.md explaining why no friction file was added.",
+      "expected_output": "Copy unchanged except metrics/transcript; no new feedback/*.md files.",
+      "files": ["evals/fixtures/minimal-bootstrapped/SKILL.md"],
       "expectations": [
-        "outputs/wake-shaped-skill/feedback/README.md exists",
-        "outputs/wake-shaped-skill/SKILL.md references feedback",
-        "references/wake.md or SKILL.md mentions feedback/ for agents finishing a wake run",
-        "feedback/README.md mentions wake or scheduled/unattended context",
-        "No friction note files seeded except README.md"
+        "No new files matching outputs/minimal-bootstrapped/feedback/YYYY-MM-DDTHHMM-*.md",
+        "outputs/minimal-bootstrapped/SKILL.md was not modified from the fixture copy",
+        "Only feedback/README.md exists under feedback/ (no extra .md notes)"
       ]
     },
     {
       "id": 3,
-      "name": "runtime-quiet",
-      "prompt": "Simulate a **routine quiet run** of an already-bootstrapped skill.\n\nThe fixture `evals/fixtures/wake-shaped-bootstrapped/` already has feedback/ set up.\n\n1. Copy it to `outputs/wake-shaped-bootstrapped/` (do not modify evals/fixtures).\n2. Read feedback/README.md. You had a routine successful run with no surprises.\n3. Follow the runtime rules: **do not** write a friction file; **do not** edit SKILL.md or wake.md.\n4. Write metrics.json and transcript.md explaining why no friction file was added.",
-      "expected_output": "Copy unchanged except metrics/transcript; no new feedback/*.md files.",
-      "files": ["evals/fixtures/wake-shaped-bootstrapped/SKILL.md"],
+      "name": "runtime-friction",
+      "prompt": "Simulate a **non-routine run** using the trap fixture.\n\nThe fixture `evals/fixtures/trap-skill/` already has feedback/ bootstrapped. Step 1 points at `data/project.txt`, but the file is actually at `inputs/project.txt`.\n\n1. Copy `evals/fixtures/trap-skill/` to `outputs/trap-skill/` (do not modify evals/fixtures).\n2. Follow SKILL.md. Discover the wrong path, complete the line count using `inputs/project.txt`.\n3. Per feedback/README.md, write **one** friction note about the misleading path. Do **not** edit SKILL.md to fix the bug.\n4. Write metrics.json and transcript.md.",
+      "expected_output": "One timestamped friction note; SKILL.md unchanged; task completed despite bad path.",
+      "files": [
+        "evals/fixtures/trap-skill/SKILL.md",
+        "evals/fixtures/trap-skill/inputs/project.txt"
+      ],
       "expectations": [
-        "No new files matching outputs/wake-shaped-bootstrapped/feedback/YYYY-MM-DDTHHMM-*.md",
-        "outputs/wake-shaped-bootstrapped/SKILL.md was not modified from the fixture copy",
-        "Only feedback/README.md exists under feedback/ (no extra .md notes)"
+        "Exactly one new friction note matching outputs/trap-skill/feedback/YYYY-MM-DDTHHMM-*.md",
+        "Friction note mentions the wrong or correct path (data/project or inputs/project)",
+        "Friction note has a What happened section",
+        "outputs/trap-skill/SKILL.md was not modified from the fixture copy"
       ]
     }
   ]

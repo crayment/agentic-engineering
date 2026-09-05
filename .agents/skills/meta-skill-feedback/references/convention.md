@@ -34,7 +34,7 @@ YYYY-MM-DDTHHMM-<slug>.md
 
 Examples:
 
-- `2026-08-29T1130-no-feedback-pointer-in-wake.md`
+- `2026-08-29T1130-wrong-path-in-step-two.md`
 - `2026-08-29T1130-actions-md-unicode-append-bc7b8f6.md`
 
 ## File body template

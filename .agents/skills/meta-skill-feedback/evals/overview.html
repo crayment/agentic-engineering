@@ -106,8 +106,8 @@
       <div class="compare">
         <div class="card">
           <strong>1 · Bootstrap</strong>
-          Cody asks an agent to use the <strong>meta-skill-feedback</strong> skill to add a feedback system to a target skill (e.g. email-inbox-agent).<br><br>
-          The agent loads meta-skill-feedback, reads the target skill, then creates <code>feedback/</code>, <code>feedback/README.md</code>, <code>feedback/resolved/</code>, and finish-line cues in that target’s <code>SKILL.md</code> (and maybe <code>wake.md</code>).
+          Cody asks an agent to use the <strong>meta-skill-feedback</strong> skill to add a feedback system to a target skill.<br><br>
+          The agent loads meta-skill-feedback, reads the target skill, then creates <code>feedback/</code>, <code>feedback/README.md</code>, <code>feedback/resolved/</code>, and a finish-line cue in that target’s <code>SKILL.md</code> (e.g. “Before you finish”).
         </div>
         <div class="card">
           <strong>2 · Runtime</strong>
@@ -115,6 +115,7 @@
           If something <em>non-routine</em> misled them → write one timestamped <code>.md</code> file. Routine run → write nothing. Never edit the skill.
         </div>
       </div>
+      <p style="margin-top:0.75rem;font-size:0.85rem;color:var(--muted);">My Machines <code>wake.md</code> / <code>wake.sh</code> is a <strong>separate scheduling system</strong>. It is not part of meta-skill-feedback. If Cody wants feedback cues on unattended runs, he patches wake separately.</p>
       <pre>target-skill/
 ├── SKILL.md           ← “Before you finish” → feedback/README.md
 └── feedback/
@@ -141,24 +142,25 @@
           <td><span class="pill yes">ran</span></td>
         </tr>
         <tr>
-          <td><strong>bootstrap-wake-shaped</strong></td>
-          <td>Same, but fixture has <code>references/wake.md</code> — agent must adapt cues for scheduled-wake shape.</td>
-          <td>Above + wake-appropriate README / finish-line mention.</td>
-          <td><span class="pill pending">pending</span></td>
-        </tr>
-        <tr>
           <td><strong>runtime-quiet</strong></td>
           <td>Copy <em>already bootstrapped</em> fixture; simulate a <strong>routine</strong> run with no surprises.</td>
           <td><strong>No</strong> new friction <code>.md</code>; <code>SKILL.md</code> unchanged.</td>
+          <td><span class="pill pending">pending</span></td>
+        </tr>
+        <tr>
+          <td><strong>runtime-friction</strong></td>
+          <td>Copy <code>trap-skill</code> fixture — step 1 points at <code>data/project.txt</code> but file is at <code>inputs/project.txt</code>. Complete task; write one friction note; do not fix SKILL.md.</td>
+          <td>Exactly one timestamped note; mentions path mismatch; has “What happened”; SKILL.md unchanged.</td>
           <td><span class="pill pending">pending</span></td>
         </tr>
       </table>
 
       <p style="margin-top:0.85rem;"><strong>Important distinction:</strong></p>
       <ul>
-        <li>Evals <strong>1–2</strong> test <strong>bootstrap</strong> — “can an agent install the inbox correctly?”</li>
-        <li>Eval <strong>3</strong> tests <strong>runtime discipline</strong> — “on a quiet run, does the agent stay silent?”</li>
-        <li>We do <strong>not</strong> yet eval: agent mid-job hits surprise → writes a high-quality friction note. That’s production behavior; future eval or human review.</li>
+        <li>Eval <strong>1</strong> tests <strong>bootstrap</strong> — “can an agent install the inbox correctly?”</li>
+        <li>Eval <strong>2</strong> tests <strong>runtime discipline (quiet)</strong> — “on a routine run, does the agent stay silent?”</li>
+        <li>Eval <strong>3</strong> tests <strong>runtime discipline (write)</strong> — “when misled, does the agent leave a note instead of editing the skill?”</li>
+        <li>Note <em>quality</em> (good suggestion, right tone) still needs human review in the PAC viewer — checks only cover structure.</li>
       </ul>
     </section>
 
@@ -214,7 +216,7 @@
         <li>Agents with the skill can bootstrap a minimal fixture reliably (5/5 vs 2/5).</li>
         <li>We have deterministic checks + a PAC-shaped loop to iterate.</li>
       </ul>
-      <p>Still to prove: wake-shaped adaptation, runtime-quiet discipline, and eventually “writes a good friction note when misled.”</p>
+      <p>Still to prove: runtime-quiet discipline, runtime-friction writes, and (via human review) note quality on harder traps.</p>
       <p style="font-size:0.85rem;color:var(--muted);margin-top:0.75rem;">Run details: <code>references/evals.md</code> · prompts: <code>evals/evals.json</code></p>
     </section>
   </div>

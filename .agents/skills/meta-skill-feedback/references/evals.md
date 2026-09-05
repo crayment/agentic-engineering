@@ -43,11 +43,13 @@ See **[evals/overview.html](../evals/overview.html)** for a readable summary of 
 | id | name | Tests |
 |----|------|-------|
 | 1 | bootstrap-minimal | feedback/ on bare SKILL.md |
-| 2 | bootstrap-wake-shaped | + wake.md cue, adapted README |
-| 3 | runtime-quiet | pre-bootstrapped; no new friction file |
+| 2 | runtime-quiet | pre-bootstrapped; no new friction file on routine run |
+| 3 | runtime-friction | trap fixture with wrong path → one friction note |
+
+My Machines wake contracts are **not** part of this skill or its evals.
 
 ## Rules
 
 - Executors **copy** fixtures into `outputs/` — never mutate `evals/fixtures/`.
-- Subjective adaptation quality → human review in viewer, not assertions.
+- Subjective note quality → human review in viewer, not assertions.
 - Improving meta-skill-feedback: baseline uses `workspace/skill-snapshot/` per PAC improve mode.
