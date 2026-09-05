@@ -58,17 +58,8 @@ Use normal file tools (`mkdir`, write, search/replace). No scaffold script.
 
 ## Runtime (agents using a skill that already has feedback/)
 
-At end of the primary workflow — **only if something was non-routine**:
-
-1. Read `<skill>/feedback/README.md`.
-2. Skim open `feedback/*.md` (not README).
-3. **Same issue already open?** Append a **+1** vote and an **Agent comment**
-   on that file.
-4. **New issue?** Write **one new file** in `<skill>/feedback/` (not `resolved/`).
-5. Do **not** edit the skill. Do **not** duplicate the same note in Obsidian
-   `skills-feedback/` unless Cody still uses that legacy queue for this skill.
-
-Skip when the run was routine and nothing misled you.
+See **[references/runtime.md](references/runtime.md)** — decision tree, vote/+1
+format, and examples. Load `<skill>/feedback/README.md` when executing.
 
 ## Public vs private skills
 
@@ -89,6 +80,7 @@ edit skill, move notes to `resolved/`.
 |------|---------|
 | [references/convention.md](references/convention.md) | Folder layout, filenames, note body |
 | [references/bootstrap.md](references/bootstrap.md) | What to create, README starter, adaptation |
+| [references/runtime.md](references/runtime.md) | Runtime decision tree, votes, new vs +1 |
 | [references/cue-points.md](references/cue-points.md) | Where to patch target skills |
 | [references/review.md](references/review.md) | Review and resolve workflow |
 | [references/evals.md](references/evals.md) | PAC eval harness (v0 fixtures) |
