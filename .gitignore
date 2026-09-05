@@ -2,5 +2,4 @@
 # The committed skills_doctor.config.example.json documents the schema.
 scripts/skills_doctor.config.json
 
-# PAC eval workspace (iteration artifacts, not committed)
-meta-skill-feedback-workspace/
+# PAC eval workspace (moved to meta-skill-feedback repo)

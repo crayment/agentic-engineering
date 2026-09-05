@@ -1,0 +1,24 @@
+{
+  "eval": "runtime-vote",
+  "outputs": "/Users/crayment/dev/me/agentic-engineering/meta-skill-feedback-workspace/iteration-2/eval-runtime-vote/without_skill/outputs",
+  "passed": 1,
+  "total": 4,
+  "expectations": [
+    {
+      "text": "Still exactly one open friction note (the seeded file) under feedback/",
+      "passed": false
+    },
+    {
+      "text": "Seeded note has a new +1 vote line",
+      "passed": false
+    },
+    {
+      "text": "Seeded note has a new Agent comments entry",
+      "passed": false
+    },
+    {
+      "text": "outputs/counter-skill-dedupe/SKILL.md unchanged from fixture",
+      "passed": true
+    }
+  ]
+}

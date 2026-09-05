@@ -1,0 +1,30 @@
+{
+  "expectations": [
+    {
+      "text": "Exactly one new friction note in outputs/counter-skill-trap/feedback/",
+      "passed": true,
+      "evidence": "check_eval_outputs.py"
+    },
+    {
+      "text": "Note mentions data/project or inputs/project path mismatch",
+      "passed": true,
+      "evidence": "check_eval_outputs.py"
+    },
+    {
+      "text": "Note has What happened and Votes sections",
+      "passed": true,
+      "evidence": "check_eval_outputs.py"
+    },
+    {
+      "text": "outputs/counter-skill-trap/SKILL.md unchanged from fixture",
+      "passed": true,
+      "evidence": "check_eval_outputs.py"
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1.0
+  }
+}

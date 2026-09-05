@@ -1,0 +1,7 @@
+{
+  "eval": "runtime-friction",
+  "target": "outputs/counter-skill-trap",
+  "line_count": 3,
+  "friction": "data/project.txt missing; used inputs/project.txt",
+  "feedback_action": "new note 2026-09-05T1028-wrong-data-path.md"
+}

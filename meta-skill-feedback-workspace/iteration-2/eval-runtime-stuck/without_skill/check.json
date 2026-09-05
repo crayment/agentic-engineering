@@ -1,0 +1,20 @@
+{
+  "eval": "runtime-stuck",
+  "outputs": "/Users/crayment/dev/me/agentic-engineering/meta-skill-feedback-workspace/iteration-2/eval-runtime-stuck/without_skill/outputs",
+  "passed": 0,
+  "total": 3,
+  "expectations": [
+    {
+      "text": "Exactly one new friction note in outputs/counter-skill-stuck/feedback/",
+      "passed": false
+    },
+    {
+      "text": "Note mentions count.sh failure, exit, or blocked run",
+      "passed": false
+    },
+    {
+      "text": "outputs/counter-skill-stuck/SKILL.md unchanged from fixture",
+      "passed": false
+    }
+  ]
+}

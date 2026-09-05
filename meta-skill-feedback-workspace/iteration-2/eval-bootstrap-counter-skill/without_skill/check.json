@@ -1,0 +1,32 @@
+{
+  "eval": "bootstrap-counter-skill",
+  "outputs": "/Users/crayment/dev/me/agentic-engineering/meta-skill-feedback-workspace/iteration-2/eval-bootstrap-counter-skill/without_skill/outputs",
+  "passed": 2,
+  "total": 6,
+  "expectations": [
+    {
+      "text": "outputs/counter-skill/feedback/README.md exists",
+      "passed": false
+    },
+    {
+      "text": "outputs/counter-skill/feedback/resolved/ exists as a directory",
+      "passed": false
+    },
+    {
+      "text": "outputs/counter-skill/SKILL.md references feedback/ or feedback/README.md",
+      "passed": false
+    },
+    {
+      "text": "feedback/README.md mentions votes or +1 for duplicate issues",
+      "passed": false
+    },
+    {
+      "text": "No friction note files in outputs/counter-skill/feedback/ except README.md",
+      "passed": true
+    },
+    {
+      "text": "No scripts/scaffold.py was created under outputs/counter-skill/",
+      "passed": true
+    }
+  ]
+}

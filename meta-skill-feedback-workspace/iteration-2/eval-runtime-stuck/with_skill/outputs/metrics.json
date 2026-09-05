@@ -1,0 +1,6 @@
+{
+  "eval": "runtime-stuck",
+  "target": "outputs/counter-skill-stuck",
+  "script_exit_code": 1,
+  "friction_note": "outputs/counter-skill-stuck/feedback/2026-09-05T1028-count-sh-exits.md"
+}

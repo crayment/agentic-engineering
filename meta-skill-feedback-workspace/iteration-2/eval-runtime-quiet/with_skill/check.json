@@ -1,0 +1,20 @@
+{
+  "eval": "runtime-quiet",
+  "outputs": "/Users/crayment/dev/me/agentic-engineering/meta-skill-feedback-workspace/iteration-2/eval-runtime-quiet/with_skill/outputs",
+  "passed": 3,
+  "total": 3,
+  "expectations": [
+    {
+      "text": "No new files matching outputs/counter-skill-ready/feedback/YYYY-MM-DDTHHMM-*.md",
+      "passed": true
+    },
+    {
+      "text": "outputs/counter-skill-ready/SKILL.md unchanged from fixture",
+      "passed": true
+    },
+    {
+      "text": "Only feedback/README.md under feedback/",
+      "passed": true
+    }
+  ]
+}

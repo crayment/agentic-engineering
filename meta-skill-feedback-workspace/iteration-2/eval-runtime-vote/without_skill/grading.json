@@ -1,0 +1,30 @@
+{
+  "expectations": [
+    {
+      "text": "Still exactly one open friction note (the seeded file) under feedback/",
+      "passed": false,
+      "evidence": "check_eval_outputs.py"
+    },
+    {
+      "text": "Seeded note has a new +1 vote line",
+      "passed": false,
+      "evidence": "check_eval_outputs.py"
+    },
+    {
+      "text": "Seeded note has a new Agent comments entry",
+      "passed": false,
+      "evidence": "check_eval_outputs.py"
+    },
+    {
+      "text": "outputs/counter-skill-dedupe/SKILL.md unchanged from fixture",
+      "passed": true,
+      "evidence": "check_eval_outputs.py"
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "failed": 3,
+    "total": 4,
+    "pass_rate": 0.25
+  }
+}

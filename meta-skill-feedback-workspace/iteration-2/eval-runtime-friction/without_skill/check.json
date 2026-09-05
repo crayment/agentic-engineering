@@ -1,0 +1,24 @@
+{
+  "eval": "runtime-friction",
+  "outputs": "/Users/crayment/dev/me/agentic-engineering/meta-skill-feedback-workspace/iteration-2/eval-runtime-friction/without_skill/outputs",
+  "passed": 0,
+  "total": 4,
+  "expectations": [
+    {
+      "text": "Exactly one new friction note in outputs/counter-skill-trap/feedback/",
+      "passed": false
+    },
+    {
+      "text": "Note mentions data/project or inputs/project path mismatch",
+      "passed": false
+    },
+    {
+      "text": "Note has What happened and Votes sections",
+      "passed": false
+    },
+    {
+      "text": "outputs/counter-skill-trap/SKILL.md unchanged from fixture",
+      "passed": false
+    }
+  ]
+}

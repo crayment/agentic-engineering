@@ -1,0 +1,13 @@
+{
+  "eval_id": 3,
+  "eval_name": "runtime-friction",
+  "skill_name": "meta-skill-feedback",
+  "expectations": [
+    "Exactly one new friction note in outputs/counter-skill-trap/feedback/",
+    "Note mentions data/project or inputs/project path mismatch",
+    "Note has What happened and Votes sections",
+    "outputs/counter-skill-trap/SKILL.md unchanged from fixture"
+  ],
+  "prompt": "Simulate a **non-routine run** using counter-skill-trap.\n\nStep 1 points at `data/project.txt`; the file is at `inputs/project.txt`.\n\n1. Copy `evals/fixtures/counter-skill-trap/` to `outputs/counter-skill-trap/`.\n2. Follow SKILL.md, discover the wrong path, complete the line count.\n3. Per feedback/README.md, write **one new** friction note (include Votes + Agent comments sections). Do **not** edit SKILL.md.\n4. Write metrics.json and transcript.md.",
+  "expected_output": "One new timestamped note with vote format; SKILL.md unchanged."
+}
