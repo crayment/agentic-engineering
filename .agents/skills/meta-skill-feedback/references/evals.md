@@ -23,11 +23,21 @@ From agentic-engineering repo root:
 ```bash
 SKILL=./.agents/skills/meta-skill-feedback
 PAC=~/dev/me/dotfiles/agents/skills/provider-agnostic-skill-creator
-WS=./meta-skill-feedback-workspace/iteration-1
-EVAL=eval-bootstrap-counter-skill
+WS=./meta-skill-feedback-workspace/iteration-N
+FIX=$SKILL/evals/fixtures
+CHK=$SKILL/scripts/check_eval_outputs.py
 ```
 
-PAC expects eval directories named `eval-*`.
+PAC expects eval directories named `eval-*`. After executor runs, grade each:
+
+```bash
+python3 $CHK --eval bootstrap-counter-skill --outputs $WS/eval-bootstrap-counter-skill/with_skill/outputs
+python3 $CHK --eval runtime-quiet --outputs $WS/eval-runtime-quiet/with_skill/outputs --fixture-root $FIX
+# … runtime-friction, runtime-vote, runtime-stuck likewise
+cd $PAC && python3 -m scripts.aggregate_benchmark $WS --skill-name meta-skill-feedback
+```
+
+Iteration 2 (2026-09-05): **with_skill 100%** (20/20), **baseline 32%** (6/19), delta +0.68.
 
 ## Evals (v1)
 
