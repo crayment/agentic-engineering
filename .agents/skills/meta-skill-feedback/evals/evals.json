@@ -3,44 +3,73 @@
   "evals": [
     {
       "id": 1,
-      "name": "bootstrap-minimal",
-      "prompt": "Add a runtime friction-feedback inbox to the target skill using meta-skill-feedback.\n\nTarget (copy — do not edit the fixture under evals/): work inside your outputs directory.\n\n1. Copy `evals/fixtures/minimal-skill/` to `outputs/minimal-skill/`.\n2. Bootstrap feedback on `outputs/minimal-skill/` per meta-skill-feedback (feedback/, README, cue in SKILL.md only).\n3. Write `outputs/metrics.json` with `{ \"eval\": \"bootstrap-minimal\", \"target\": \"outputs/minimal-skill\" }`.\n4. Write `transcript.md` summarizing steps.\n\nDo not seed example friction notes unless you hit real friction during this task.",
-      "expected_output": "outputs/minimal-skill/ has feedback/README.md, feedback/resolved/, and SKILL.md cues agents to write friction files. No scaffold script added.",
-      "files": ["evals/fixtures/minimal-skill/SKILL.md"],
+      "name": "bootstrap-counter-skill",
+      "prompt": "Add a runtime friction-feedback inbox to the target skill using meta-skill-feedback.\n\nTarget (copy — do not edit the fixture under evals/): work inside your outputs directory.\n\n1. Copy `evals/fixtures/counter-skill/` to `outputs/counter-skill/`.\n2. Bootstrap feedback on `outputs/counter-skill/` per meta-skill-feedback (feedback/, README with vote/+1 rules, cue in SKILL.md only).\n3. If helpful, link `evals/examples/sample-friction-note.md` from feedback/README.md.\n4. Write `outputs/metrics.json` with `{ \"eval\": \"bootstrap-counter-skill\", \"target\": \"outputs/counter-skill\" }`.\n5. Write `transcript.md` summarizing steps.\n\nDo not seed example friction notes unless you hit real friction during this task.",
+      "expected_output": "outputs/counter-skill/ has feedback/README.md, feedback/resolved/, SKILL.md cues, vote/+1 instructions.",
+      "files": ["evals/fixtures/counter-skill/SKILL.md"],
       "expectations": [
-        "outputs/minimal-skill/feedback/README.md exists",
-        "outputs/minimal-skill/feedback/resolved/ exists as a directory",
-        "outputs/minimal-skill/SKILL.md references feedback/ or feedback/README.md",
-        "No new friction note files in outputs/minimal-skill/feedback/ except README.md",
-        "No scripts/scaffold.py was created under outputs/minimal-skill/"
+        "outputs/counter-skill/feedback/README.md exists",
+        "outputs/counter-skill/feedback/resolved/ exists as a directory",
+        "outputs/counter-skill/SKILL.md references feedback/ or feedback/README.md",
+        "feedback/README.md mentions votes or +1 for duplicate issues",
+        "No friction note files in outputs/counter-skill/feedback/ except README.md",
+        "No scripts/scaffold.py was created under outputs/counter-skill/"
       ]
     },
     {
       "id": 2,
       "name": "runtime-quiet",
-      "prompt": "Simulate a **routine quiet run** of an already-bootstrapped skill.\n\nThe fixture `evals/fixtures/minimal-bootstrapped/` already has feedback/ set up.\n\n1. Copy it to `outputs/minimal-bootstrapped/` (do not modify evals/fixtures).\n2. Read feedback/README.md. You had a routine successful run with no surprises.\n3. Follow the runtime rules: **do not** write a friction file; **do not** edit SKILL.md.\n4. Write metrics.json and transcript.md explaining why no friction file was added.",
-      "expected_output": "Copy unchanged except metrics/transcript; no new feedback/*.md files.",
-      "files": ["evals/fixtures/minimal-bootstrapped/SKILL.md"],
+      "prompt": "Simulate a **routine quiet run** of counter-skill-ready.\n\n1. Copy `evals/fixtures/counter-skill-ready/` to `outputs/counter-skill-ready/`.\n2. Follow SKILL.md — run `wc -l inputs/project.txt` (3 lines). No surprises.\n3. Read feedback/README.md. Do **not** write friction; do **not** edit SKILL.md.\n4. Write metrics.json and transcript.md.",
+      "expected_output": "No new feedback notes; SKILL.md unchanged.",
+      "files": ["evals/fixtures/counter-skill-ready/SKILL.md"],
       "expectations": [
-        "No new files matching outputs/minimal-bootstrapped/feedback/YYYY-MM-DDTHHMM-*.md",
-        "outputs/minimal-bootstrapped/SKILL.md was not modified from the fixture copy",
-        "Only feedback/README.md exists under feedback/ (no extra .md notes)"
+        "No new files matching outputs/counter-skill-ready/feedback/YYYY-MM-DDTHHMM-*.md",
+        "outputs/counter-skill-ready/SKILL.md unchanged from fixture",
+        "Only feedback/README.md under feedback/"
       ]
     },
     {
       "id": 3,
       "name": "runtime-friction",
-      "prompt": "Simulate a **non-routine run** using the trap fixture.\n\nThe fixture `evals/fixtures/trap-skill/` already has feedback/ bootstrapped. Step 1 points at `data/project.txt`, but the file is actually at `inputs/project.txt`.\n\n1. Copy `evals/fixtures/trap-skill/` to `outputs/trap-skill/` (do not modify evals/fixtures).\n2. Follow SKILL.md. Discover the wrong path, complete the line count using `inputs/project.txt`.\n3. Per feedback/README.md, write **one** friction note about the misleading path. Do **not** edit SKILL.md to fix the bug.\n4. Write metrics.json and transcript.md.",
-      "expected_output": "One timestamped friction note; SKILL.md unchanged; task completed despite bad path.",
+      "prompt": "Simulate a **non-routine run** using counter-skill-trap.\n\nStep 1 points at `data/project.txt`; the file is at `inputs/project.txt`.\n\n1. Copy `evals/fixtures/counter-skill-trap/` to `outputs/counter-skill-trap/`.\n2. Follow SKILL.md, discover the wrong path, complete the line count.\n3. Per feedback/README.md, write **one new** friction note (include Votes + Agent comments sections). Do **not** edit SKILL.md.\n4. Write metrics.json and transcript.md.",
+      "expected_output": "One new timestamped note with vote format; SKILL.md unchanged.",
       "files": [
-        "evals/fixtures/trap-skill/SKILL.md",
-        "evals/fixtures/trap-skill/inputs/project.txt"
+        "evals/fixtures/counter-skill-trap/SKILL.md",
+        "evals/fixtures/counter-skill-trap/inputs/project.txt"
       ],
       "expectations": [
-        "Exactly one new friction note matching outputs/trap-skill/feedback/YYYY-MM-DDTHHMM-*.md",
-        "Friction note mentions the wrong or correct path (data/project or inputs/project)",
-        "Friction note has a What happened section",
-        "outputs/trap-skill/SKILL.md was not modified from the fixture copy"
+        "Exactly one new friction note in outputs/counter-skill-trap/feedback/",
+        "Note mentions data/project or inputs/project path mismatch",
+        "Note has What happened and Votes sections",
+        "outputs/counter-skill-trap/SKILL.md unchanged from fixture"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "runtime-vote",
+      "prompt": "Simulate hitting the **same bug again** on counter-skill-dedupe.\n\nOpen note `feedback/2026-08-01T1200-wrong-data-path.md` already describes the data/project.txt vs inputs/project.txt mismatch.\n\n1. Copy `evals/fixtures/counter-skill-dedupe/` to `outputs/counter-skill-dedupe/`.\n2. Follow SKILL.md, hit the same path bug, complete the line count via inputs/project.txt.\n3. Per feedback/README.md: skim open notes, add **+1** and an **Agent comment** on the existing file — **do not** create a duplicate file. Do **not** edit SKILL.md.\n4. Write metrics.json and transcript.md.",
+      "expected_output": "Seeded note updated with +1 vote; no second friction file; SKILL.md unchanged.",
+      "files": [
+        "evals/fixtures/counter-skill-dedupe/SKILL.md",
+        "evals/fixtures/counter-skill-dedupe/feedback/2026-08-01T1200-wrong-data-path.md"
+      ],
+      "expectations": [
+        "Still exactly one open friction note (the seeded file) under feedback/",
+        "Seeded note has a new +1 vote line",
+        "Seeded note has a new Agent comments entry",
+        "outputs/counter-skill-dedupe/SKILL.md unchanged from fixture"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "runtime-stuck",
+      "prompt": "Simulate a **blocked run** on counter-skill-stuck.\n\n1. Copy `evals/fixtures/counter-skill-stuck/` to `outputs/counter-skill-stuck/`.\n2. Run `scripts/count.sh` — it exits 1. The skill has no recovery steps. Unattended: no human to ask.\n3. Write **one** friction note describing the block. Do **not** edit SKILL.md to add recovery steps.\n4. Write metrics.json and transcript.md.",
+      "expected_output": "One friction note about script failure; SKILL.md unchanged.",
+      "files": ["evals/fixtures/counter-skill-stuck/SKILL.md"],
+      "expectations": [
+        "Exactly one new friction note in outputs/counter-skill-stuck/feedback/",
+        "Note mentions count.sh failure, exit, or blocked run",
+        "outputs/counter-skill-stuck/SKILL.md unchanged from fixture"
       ]
     }
   ]

@@ -1,9 +1,9 @@
 ---
-name: eval-fixture-trap
-description: Fixture with an intentional bad path for runtime-friction eval. Not a real skill.
+name: eval-fixture-counter-skill-trap
+description: Counter-skill with wrong path for runtime-friction eval.
 ---
 
-# Trap fixture
+# Counter skill (trap)
 
 Count lines in the project file and report the total.
 
@@ -14,5 +14,5 @@ Count lines in the project file and report the total.
 
 ## Before you finish
 
-If anything misled you, write **one file** in `feedback/` — see [feedback/README.md](feedback/README.md).
+If anything misled you, see [feedback/README.md](feedback/README.md).
 Do not edit this skill. Skip when the run was routine.

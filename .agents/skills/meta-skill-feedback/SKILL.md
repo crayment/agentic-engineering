@@ -11,9 +11,9 @@ license: Apache-2.0
 
 # Meta skill feedback
 
-Add a **runtime friction inbox** to an existing skill. Agents write one markdown
-file per surprise; Cody reviews and edits the skill; resolved notes move to
-`feedback/resolved/`.
+Add a **runtime friction inbox** to an existing skill. Agents leave notes after
+surprises — new issues get a file; repeat issues get **+1 votes** on the open
+file. Cody reviews and edits the skill; resolved notes move to `feedback/resolved/`.
 
 This is **not** eval-harness feedback (JSON in a workspace). It is **not**
 task output (rule proposals, audit logs). It is: *the skill misled me, I had to
@@ -49,8 +49,8 @@ are a separate system — do not create or patch them from this skill.
    - Required: **Before you finish** (or equivalent) near the end of `SKILL.md`
    Match the target skill's voice and section names; do not paste boilerplate
    blindly if Iron laws or a final-report step already exists — extend those.
-5. **Verify** by reading back: an agent finishing a routine run sees where to
-   write friction; an agent on a quiet run knows to skip.
+5. **Verify** by reading back: an agent finishing a routine run knows to skip;
+   an agent hitting repeat friction knows to vote +1 on an open note.
 6. Summarize for Cody what you added and where. Do **not** seed example friction
    files unless this bootstrap run itself hit friction worth recording.
 
@@ -61,8 +61,11 @@ Use normal file tools (`mkdir`, write, search/replace). No scaffold script.
 At end of the primary workflow — **only if something was non-routine**:
 
 1. Read `<skill>/feedback/README.md`.
-2. Write **one new file** in `<skill>/feedback/` (not `resolved/`).
-3. Do **not** edit the skill. Do **not** duplicate the same note in Obsidian
+2. Skim open `feedback/*.md` (not README).
+3. **Same issue already open?** Append a **+1** vote and an **Agent comment**
+   on that file.
+4. **New issue?** Write **one new file** in `<skill>/feedback/` (not `resolved/`).
+5. Do **not** edit the skill. Do **not** duplicate the same note in Obsidian
    `skills-feedback/` unless Cody still uses that legacy queue for this skill.
 
 Skip when the run was routine and nothing misled you.

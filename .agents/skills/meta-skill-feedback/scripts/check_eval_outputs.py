@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# ABOUTME: Deterministic eval checks for meta-skill-feedback bootstrap/quiet runs.
+# ABOUTME: Deterministic eval checks for meta-skill-feedback bootstrap/runtime runs.
 # ABOUTME: Used by PAC grader workers; prints JSON for evidence citation.
 
 from __future__ import annotations
@@ -13,6 +13,9 @@ from pathlib import Path
 TIMESTAMP_NOTE = re.compile(
     r"feedback/(\d{4}-\d{2}-\d{2}T\d{4}-.+\.md)$"
 )
+VOTE_PLUS_ONE = re.compile(r"·\s*\+1\b")
+AGENT_COMMENT = re.compile(r"^###\s+\d{4}-\d{2}-\d{2}T\d{4}", re.MULTILINE)
+DEDUPE_SEED = "2026-08-01T1200-wrong-data-path.md"
 
 
 def _exists(path: Path) -> bool:
@@ -40,33 +43,44 @@ def _skill_cues_feedback(skill_text: str) -> bool:
 def feedback_notes(feedback_dir: Path) -> list[Path]:
     if not feedback_dir.is_dir():
         return []
-    return [
-        p
-        for p in feedback_dir.glob("*.md")
-        if p.name != "README.md"
-    ]
+    return [p for p in feedback_dir.glob("*.md") if p.name != "README.md"]
 
 
-def check_bootstrap_minimal(outputs: Path) -> list[dict]:
-    target = outputs / "minimal-skill"
+def _skill_unchanged(fixture_root: Path, outputs: Path, fixture_name: str) -> bool:
+    fixture_skill = fixture_root / fixture_name / "SKILL.md"
+    out_skill = outputs / fixture_name / "SKILL.md"
+    return (
+        _exists(fixture_skill)
+        and _exists(out_skill)
+        and _read(fixture_skill) == _read(out_skill)
+    )
+
+
+def check_bootstrap_counter_skill(outputs: Path) -> list[dict]:
+    target = outputs / "counter-skill"
     fb = target / "feedback"
     skill = target / "SKILL.md"
+    readme = _read(fb / "README.md").lower()
     checks = [
-        ("outputs/minimal-skill/feedback/README.md exists", _exists(fb / "README.md")),
+        ("outputs/counter-skill/feedback/README.md exists", _exists(fb / "README.md")),
         (
-            "outputs/minimal-skill/feedback/resolved/ exists as a directory",
+            "outputs/counter-skill/feedback/resolved/ exists as a directory",
             _dir_exists(fb / "resolved"),
         ),
         (
-            "outputs/minimal-skill/SKILL.md references feedback/ or feedback/README.md",
+            "outputs/counter-skill/SKILL.md references feedback/ or feedback/README.md",
             _skill_cues_feedback(_read(skill)),
         ),
         (
-            "No new friction note files in outputs/minimal-skill/feedback/ except README.md",
+            "feedback/README.md mentions votes or +1 for duplicate issues",
+            "vote" in readme or "+1" in readme,
+        ),
+        (
+            "No friction note files in outputs/counter-skill/feedback/ except README.md",
             len(feedback_notes(fb)) == 0,
         ),
         (
-            "No scripts/scaffold.py was created under outputs/minimal-skill/",
+            "No scripts/scaffold.py was created under outputs/counter-skill/",
             not _exists(target / "scripts" / "scaffold.py"),
         ),
     ]
@@ -74,28 +88,22 @@ def check_bootstrap_minimal(outputs: Path) -> list[dict]:
 
 
 def check_runtime_quiet(outputs: Path, fixture_root: Path) -> list[dict]:
-    target = outputs / "minimal-bootstrapped"
+    name = "counter-skill-ready"
+    target = outputs / name
     fb = target / "feedback"
-    fixture_skill = fixture_root / "minimal-bootstrapped" / "SKILL.md"
-    out_skill = target / "SKILL.md"
     notes = feedback_notes(fb)
     ts_notes = [p for p in notes if TIMESTAMP_NOTE.search(str(p.relative_to(target)))]
-    skill_unchanged = (
-        _exists(fixture_skill)
-        and _exists(out_skill)
-        and _read(fixture_skill) == _read(out_skill)
-    )
     checks = [
         (
-            "No new files matching outputs/minimal-bootstrapped/feedback/YYYY-MM-DDTHHMM-*.md",
+            f"No new files matching outputs/{name}/feedback/YYYY-MM-DDTHHMM-*.md",
             len(ts_notes) == 0,
         ),
         (
-            "outputs/minimal-bootstrapped/SKILL.md was not modified from the fixture copy",
-            skill_unchanged,
+            f"outputs/{name}/SKILL.md unchanged from fixture",
+            _skill_unchanged(fixture_root, outputs, name),
         ),
         (
-            "Only feedback/README.md exists under feedback/ (no extra .md notes)",
+            "Only feedback/README.md under feedback/",
             len(notes) == 0,
         ),
     ]
@@ -103,10 +111,9 @@ def check_runtime_quiet(outputs: Path, fixture_root: Path) -> list[dict]:
 
 
 def check_runtime_friction(outputs: Path, fixture_root: Path) -> list[dict]:
-    target = outputs / "trap-skill"
+    name = "counter-skill-trap"
+    target = outputs / name
     fb = target / "feedback"
-    fixture_skill = fixture_root / "trap-skill" / "SKILL.md"
-    out_skill = target / "SKILL.md"
     notes = feedback_notes(fb)
     ts_notes = [p for p in notes if TIMESTAMP_NOTE.search(str(p.relative_to(target)))]
     note_text = "\n".join(_read(p) for p in ts_notes).lower()
@@ -114,38 +121,103 @@ def check_runtime_friction(outputs: Path, fixture_root: Path) -> list[dict]:
         s in note_text
         for s in ("data/project", "inputs/project", "wrong path", "misleading")
     )
-    has_what_happened = "what happened" in note_text
-    skill_unchanged = (
-        _exists(fixture_skill)
-        and _exists(out_skill)
-        and _read(fixture_skill) == _read(out_skill)
-    )
     checks = [
         (
-            "Exactly one new friction note matching outputs/trap-skill/feedback/YYYY-MM-DDTHHMM-*.md",
+            f"Exactly one new friction note in outputs/{name}/feedback/",
             len(ts_notes) == 1,
         ),
         (
-            "Friction note mentions the wrong or correct path (data/project or inputs/project)",
+            "Note mentions data/project or inputs/project path mismatch",
             path_mentioned,
         ),
         (
-            "Friction note has a What happened section",
-            has_what_happened,
+            "Note has What happened and Votes sections",
+            "what happened" in note_text and "votes" in note_text,
         ),
         (
-            "outputs/trap-skill/SKILL.md was not modified from the fixture copy",
-            skill_unchanged,
+            f"outputs/{name}/SKILL.md unchanged from fixture",
+            _skill_unchanged(fixture_root, outputs, name),
+        ),
+    ]
+    return [{"text": t, "passed": p} for t, p in checks]
+
+
+def check_runtime_vote(outputs: Path, fixture_root: Path) -> list[dict]:
+    name = "counter-skill-dedupe"
+    target = outputs / name
+    fb = target / "feedback"
+    notes = feedback_notes(fb)
+    seed_path = fb / DEDUPE_SEED
+    fixture_seed = fixture_root / name / "feedback" / DEDUPE_SEED
+    out_text = _read(seed_path)
+    fixture_text = _read(fixture_seed)
+    plus_one_count = len(VOTE_PLUS_ONE.findall(out_text))
+    fixture_plus_one = len(VOTE_PLUS_ONE.findall(fixture_text))
+    new_comments = len(AGENT_COMMENT.findall(out_text)) - len(
+        AGENT_COMMENT.findall(fixture_text)
+    )
+    checks = [
+        (
+            "Still exactly one open friction note (the seeded file) under feedback/",
+            len(notes) == 1 and _exists(seed_path),
+        ),
+        (
+            "Seeded note has a new +1 vote line",
+            plus_one_count > fixture_plus_one,
+        ),
+        (
+            "Seeded note has a new Agent comments entry",
+            new_comments >= 1 or (
+                "## agent comments" in out_text.lower()
+                and out_text.strip() != fixture_text.strip()
+                and "+1" in out_text.lower()
+            ),
+        ),
+        (
+            f"outputs/{name}/SKILL.md unchanged from fixture",
+            _skill_unchanged(fixture_root, outputs, name),
+        ),
+    ]
+    return [{"text": t, "passed": p} for t, p in checks]
+
+
+def check_runtime_stuck(outputs: Path, fixture_root: Path) -> list[dict]:
+    name = "counter-skill-stuck"
+    target = outputs / name
+    fb = target / "feedback"
+    notes = feedback_notes(fb)
+    ts_notes = [p for p in notes if TIMESTAMP_NOTE.search(str(p.relative_to(target)))]
+    note_text = "\n".join(_read(p) for p in ts_notes).lower()
+    blocked = any(
+        s in note_text
+        for s in ("count.sh", "exit", "fail", "blocked", "error", "stuck")
+    )
+    checks = [
+        (
+            f"Exactly one new friction note in outputs/{name}/feedback/",
+            len(ts_notes) == 1,
+        ),
+        (
+            "Note mentions count.sh failure, exit, or blocked run",
+            blocked,
+        ),
+        (
+            f"outputs/{name}/SKILL.md unchanged from fixture",
+            _skill_unchanged(fixture_root, outputs, name),
         ),
     ]
     return [{"text": t, "passed": p} for t, p in checks]
 
 
 CHECKERS = {
-    "bootstrap-minimal": check_bootstrap_minimal,
+    "bootstrap-counter-skill": check_bootstrap_counter_skill,
     "runtime-quiet": check_runtime_quiet,
     "runtime-friction": check_runtime_friction,
+    "runtime-vote": check_runtime_vote,
+    "runtime-stuck": check_runtime_stuck,
 }
+
+RUNTIME_EVALS = frozenset({"runtime-quiet", "runtime-friction", "runtime-vote", "runtime-stuck"})
 
 
 def main() -> None:
@@ -160,14 +232,11 @@ def main() -> None:
     )
     args = parser.parse_args()
     outputs = args.outputs.resolve()
-    if args.eval in ("runtime-quiet", "runtime-friction"):
+    if args.eval in RUNTIME_EVALS:
         if not args.fixture_root:
             raise SystemExit("--fixture-root required for runtime evals")
         fixture_root = args.fixture_root.resolve()
-        if args.eval == "runtime-quiet":
-            results = check_runtime_quiet(outputs, fixture_root)
-        else:
-            results = check_runtime_friction(outputs, fixture_root)
+        results = CHECKERS[args.eval](outputs, fixture_root)
     else:
         results = CHECKERS[args.eval](outputs)
     summary = {

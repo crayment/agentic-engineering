@@ -11,11 +11,12 @@ do not fork PAC into this skill. Load:
 |------|---------|
 | `evals/evals.json` | Prompts + expectations |
 | `evals/overview.html` | Human-readable: skill purpose, what evals test, v0 results |
-| `evals/fixtures/` | Copy-only target skills (never edit in place) |
+| `evals/fixtures/counter-skill*` | Fake mini-skills (copy-only) |
+| `evals/examples/` | Sample friction notes from passing runs (linked by fixtures) |
 | `scripts/check_eval_outputs.py` | Deterministic checks for grader |
 | `meta-skill-feedback-workspace/` | Iteration runs (gitignored, repo sibling) |
 
-## Quick run (iteration 1)
+## Quick run
 
 From agentic-engineering repo root:
 
@@ -23,28 +24,22 @@ From agentic-engineering repo root:
 SKILL=./.agents/skills/meta-skill-feedback
 PAC=~/dev/me/dotfiles/agents/skills/provider-agnostic-skill-creator
 WS=./meta-skill-feedback-workspace/iteration-1
-EVAL=eval-bootstrap-minimal
+EVAL=eval-bootstrap-counter-skill
 ```
 
-PAC expects eval directories named `eval-*` (e.g. `eval-bootstrap-minimal/`).
+PAC expects eval directories named `eval-*`.
 
-1. **Orchestrator** creates `$WS/$EVAL/with_skill/` and `$WS/$EVAL/without_skill/`.
-2. **Executor workers** (parallel when possible):
-   - **with_skill:** read `$SKILL/SKILL.md`, run prompt from `evals/evals.json`, write deliverables under `{run}/outputs/`, `transcript.md`, `outputs/metrics.json`.
-   - **without_skill:** same prompt, no meta-skill-feedback (baseline improvises).
-3. **Grader:** run `python3 $SKILL/scripts/check_eval_outputs.py --eval bootstrap-minimal --outputs {run}/outputs` and cite results; fill `grading.json` per PAC `agents/grader.md`.
-4. **Aggregate:** `python3 -m scripts.aggregate_benchmark $WS/iteration-1 --skill-name meta-skill-feedback` from PAC directory.
-5. **Viewer:** `python3 eval-viewer/generate_review.py $WS/iteration-1 --skill-name meta-skill-feedback --benchmark $WS/iteration-1/benchmark.json --static $WS/iteration-1/review.html`
+## Evals (v1)
 
-## Evals (v0)
-
-See **[evals/overview.html](../evals/overview.html)** for a readable summary of what we’re testing and early results.
+See **[evals/overview.html](../evals/overview.html)** for a readable summary.
 
 | id | name | Tests |
 |----|------|-------|
-| 1 | bootstrap-minimal | feedback/ on bare SKILL.md |
-| 2 | runtime-quiet | pre-bootstrapped; no new friction file on routine run |
-| 3 | runtime-friction | trap fixture with wrong path → one friction note |
+| 1 | bootstrap-counter-skill | Install feedback/ on bare counter-skill |
+| 2 | runtime-quiet | Routine run → no note |
+| 3 | runtime-friction | Wrong path → new note with Votes format |
+| 4 | runtime-vote | Same bug open → +1 on existing note, no duplicate file |
+| 5 | runtime-stuck | Script fails → friction note, don't patch SKILL.md |
 
 My Machines wake contracts are **not** part of this skill or its evals.
 
@@ -52,4 +47,4 @@ My Machines wake contracts are **not** part of this skill or its evals.
 
 - Executors **copy** fixtures into `outputs/` — never mutate `evals/fixtures/`.
 - Subjective note quality → human review in viewer, not assertions.
-- Improving meta-skill-feedback: baseline uses `workspace/skill-snapshot/` per PAC improve mode.
+- After a great runtime-friction run, refresh `evals/examples/sample-friction-note.md`.

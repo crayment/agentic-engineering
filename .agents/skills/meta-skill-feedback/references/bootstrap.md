@@ -24,22 +24,31 @@ cues on unattended runs, he patches wake separately — not via this meta-skill.
 Copy and adapt. Drop bullets that do not apply; add skill-specific "not feedback"
 routes (audit logs, rule proposals, eval JSON, etc.).
 
+If this skill has eval fixtures, link one real example note from `evals/examples/`
+(representative passing eval output) instead of maintaining a second doc sample.
+
 ```markdown
 # Skill feedback (runtime friction)
 
-After using this skill, if something **non-routine** misled you, write **one**
-markdown file here. Do not edit the skill.
+After using this skill, if something **non-routine** misled you, leave feedback
+here. Do not edit the skill.
+
+## Before you write
+
+1. Skim open `feedback/*.md` (not README).
+2. **Same issue already open?** Add a **+1** under **Votes** and a short entry under **Agent comments** on that file.
+3. **New issue?** Create one timestamped file — see format below.
 
 ## When to write
 
 - Wrong/missing instruction, surprise failure, workaround you had to invent
 - Skip routine successful runs
 
-## Filename
+## Filename (new issues only)
 
 `YYYY-MM-DDTHHMM-<short-slug>.md` — timestamp required; lowercase hyphens in slug.
 
-## Body
+## New issue — body
 
 # YYYY-MM-DD — <id> · <role> · <machine>
 
@@ -52,9 +61,23 @@ Specific friction.
 ## Suggestion (optional)
 Smallest skill change that would help. Do not apply it yourself.
 
+## Votes
+
+- **YYYY-MM-DDTHHMM** — <id> · opened
+
+## Agent comments
+
+_(none yet)_
+
+## Same issue again — append only
+
+**Votes:** `- **YYYY-MM-DDTHHMM** — <id> · +1`
+
+**Agent comments:** `### YYYY-MM-DDTHHMM — <id>` then one short paragraph.
+
 ## Rules
 
-- One topic per file · no secrets · Cody moves handled notes to `resolved/`
+- One topic per file · duplicates are +1 votes, not new files · no secrets · Cody moves handled notes to `resolved/`
 ```
 
 ## Adapting to common skill shapes
@@ -64,6 +87,7 @@ Smallest skill change that would help. Do not apply it yourself.
 | **Wiki + skill** (external Obsidian rules) | In README: "wiki wrong → feedback; rule proposals → `<audit path>`" |
 | **Interactive triage** | Cue in final-report / batch-complete section, not mid-workflow |
 | **Public AE skill** | README note: entries must stay generic; optional gitignore for `feedback/*.md` |
+| **Skill with evals** | Link `evals/examples/*.md` from README as the live format sample |
 
 ## Iron laws vs new section
 

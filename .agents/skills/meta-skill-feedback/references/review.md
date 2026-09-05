@@ -19,8 +19,8 @@ ls path/to/skill/feedback/*.md 2>/dev/null | grep -v README
 
 ## Per-file loop
 
-1. **Read** the friction file — context, what happened, suggestion.
-2. **Brief** (if live Cody): job, friction, break vs inconvenience, smallest fix, ask ship/defer/kill.
+1. **Read** the friction file — context, what happened, suggestion, **vote count**.
+2. **Brief** (if live Cody): job, friction, break vs inconvenience, vote weight, smallest fix, ask ship/defer/kill.
 3. **Ship** — edit the target skill (real source-of-truth path per `install-skill`).
 4. **Resolve** — move the note:
 

@@ -112,16 +112,32 @@
         <div class="card">
           <strong>2 · Runtime</strong>
           Agent finishes a normal job using a skill that already has <code>feedback/</code>.<br><br>
-          If something <em>non-routine</em> misled them → write one timestamped <code>.md</code> file. Routine run → write nothing. Never edit the skill.
+          <strong>New issue</strong> → one timestamped file (with <code>Votes</code> + <code>Agent comments</code>).<br>
+          <strong>Same issue again</strong> → +1 vote on the open file — duplicates are votes, not spam.<br>
+          Routine run → write nothing. Never edit the skill.
         </div>
       </div>
-      <p style="margin-top:0.75rem;font-size:0.85rem;color:var(--muted);">My Machines <code>wake.md</code> / <code>wake.sh</code> is a <strong>separate scheduling system</strong>. It is not part of meta-skill-feedback. If Cody wants feedback cues on unattended runs, he patches wake separately.</p>
+      <p style="margin-top:0.75rem;font-size:0.85rem;color:var(--muted);">My Machines <code>wake.md</code> / <code>wake.sh</code> is a <strong>separate scheduling system</strong>. It is not part of meta-skill-feedback.</p>
       <pre>target-skill/
 ├── SKILL.md           ← “Before you finish” → feedback/README.md
 └── feedback/
-    ├── README.md
-    ├── 2026-09-05T0948-slug.md   ← open
-    └── resolved/                 ← after Cody reviews</pre>
+    ├── README.md      ← links evals/examples/ when present
+    ├── 2026-09-05T0948-slug.md   ← open (Votes + Agent comments)
+    └── resolved/</pre>
+    </section>
+
+    <section>
+      <h2>Counter-skill fixtures</h2>
+      <p class="lead">All evals use the same fictional <strong>counter-skill</strong> family under <code>evals/fixtures/</code> — copy-only mini-skills, never mutated in place.</p>
+      <table>
+        <tr><th>Fixture</th><th>Role</th></tr>
+        <tr><td><code>counter-skill</code></td><td>Bare — bootstrap eval</td></tr>
+        <tr><td><code>counter-skill-ready</code></td><td>Bootstrapped, correct paths — quiet run</td></tr>
+        <tr><td><code>counter-skill-trap</code></td><td>Wrong <code>data/project.txt</code> path — new friction note</td></tr>
+        <tr><td><code>counter-skill-dedupe</code></td><td>Trap + seeded open note — +1 vote eval</td></tr>
+        <tr><td><code>counter-skill-stuck</code></td><td><code>scripts/count.sh</code> exits 1 — blocked run</td></tr>
+      </table>
+      <p style="font-size:0.85rem;color:var(--muted);">Sample note: <code>evals/examples/sample-friction-note.md</code> (refresh from a passing runtime-friction run).</p>
     </section>
 
     <section>
@@ -136,31 +152,44 @@
           <th>Status</th>
         </tr>
         <tr>
-          <td><strong>bootstrap-minimal</strong></td>
-          <td>Copy bare fixture → <code>outputs/</code>, then <strong>install</strong> feedback inbox using meta-skill-feedback.</td>
-          <td><code>feedback/README.md</code>, <code>resolved/</code>, cues in <code>SKILL.md</code>; no seeded friction files; no scaffold script.</td>
-          <td><span class="pill yes">ran</span></td>
+          <td><strong>bootstrap-counter-skill</strong></td>
+          <td>Copy bare <code>counter-skill</code> → install feedback inbox (+ vote/+1 rules in README).</td>
+          <td><code>feedback/</code>, <code>resolved/</code>, SKILL cue, README mentions votes.</td>
+          <td><span class="pill yes">ran v0</span></td>
         </tr>
         <tr>
           <td><strong>runtime-quiet</strong></td>
-          <td>Copy <em>already bootstrapped</em> fixture; simulate a <strong>routine</strong> run with no surprises.</td>
-          <td><strong>No</strong> new friction <code>.md</code>; <code>SKILL.md</code> unchanged.</td>
+          <td><code>counter-skill-ready</code> — routine <code>wc -l</code>, no surprises.</td>
+          <td>No new friction files; SKILL unchanged.</td>
           <td><span class="pill pending">pending</span></td>
         </tr>
         <tr>
           <td><strong>runtime-friction</strong></td>
-          <td>Copy <code>trap-skill</code> fixture — step 1 points at <code>data/project.txt</code> but file is at <code>inputs/project.txt</code>. Complete task; write one friction note; do not fix SKILL.md.</td>
-          <td>Exactly one timestamped note; mentions path mismatch; has “What happened”; SKILL.md unchanged.</td>
+          <td><code>counter-skill-trap</code> — wrong path; complete task; new note with Votes format.</td>
+          <td>One note; path mentioned; Votes section; SKILL unchanged.</td>
+          <td><span class="pill pending">pending</span></td>
+        </tr>
+        <tr>
+          <td><strong>runtime-vote</strong></td>
+          <td><code>counter-skill-dedupe</code> — same bug already open; add +1, no duplicate file.</td>
+          <td>Seeded note updated; still one open file; SKILL unchanged.</td>
+          <td><span class="pill pending">pending</span></td>
+        </tr>
+        <tr>
+          <td><strong>runtime-stuck</strong></td>
+          <td><code>counter-skill-stuck</code> — <code>count.sh</code> exits 1; unattended; write block note.</td>
+          <td>One note about failure; SKILL unchanged.</td>
           <td><span class="pill pending">pending</span></td>
         </tr>
       </table>
 
-      <p style="margin-top:0.85rem;"><strong>Important distinction:</strong></p>
+      <p style="margin-top:0.85rem;"><strong>Eval ladder:</strong></p>
       <ul>
-        <li>Eval <strong>1</strong> tests <strong>bootstrap</strong> — “can an agent install the inbox correctly?”</li>
-        <li>Eval <strong>2</strong> tests <strong>runtime discipline (quiet)</strong> — “on a routine run, does the agent stay silent?”</li>
-        <li>Eval <strong>3</strong> tests <strong>runtime discipline (write)</strong> — “when misled, does the agent leave a note instead of editing the skill?”</li>
-        <li>Note <em>quality</em> (good suggestion, right tone) still needs human review in the PAC viewer — checks only cover structure.</li>
+        <li><strong>bootstrap</strong> — install inbox correctly?</li>
+        <li><strong>quiet</strong> — routine → silence?</li>
+        <li><strong>friction</strong> — misled → new file with vote format?</li>
+        <li><strong>vote</strong> — same issue → +1 on existing file?</li>
+        <li><strong>stuck</strong> — hard fail → note without patching skill?</li>
       </ul>
     </section>
 
@@ -173,7 +202,7 @@
       </ul>
       <p><code>scripts/check_eval_outputs.py</code> checks filesystem facts; PAC aggregates into <code>benchmark.md</code> + review viewer.</p>
 
-      <p style="margin-top:0.75rem;font-size:0.85rem;color:var(--muted);">Iteration 1 · bootstrap-minimal only:</p>
+      <p style="margin-top:0.75rem;font-size:0.85rem;color:var(--muted);">Iteration 1 · bootstrap-minimal (now bootstrap-counter-skill):</p>
       <div class="bar-wrap">
         <span style="width:5rem;">with_skill</span>
         <div class="bar"><div class="bar-fill" style="width:100%"></div></div>
@@ -216,7 +245,7 @@
         <li>Agents with the skill can bootstrap a minimal fixture reliably (5/5 vs 2/5).</li>
         <li>We have deterministic checks + a PAC-shaped loop to iterate.</li>
       </ul>
-      <p>Still to prove: runtime-quiet discipline, runtime-friction writes, and (via human review) note quality on harder traps.</p>
+      <p>Still to prove: runtime-quiet, friction, vote, stuck — and (via human review) note quality on harder traps.</p>
       <p style="font-size:0.85rem;color:var(--muted);margin-top:0.75rem;">Run details: <code>references/evals.md</code> · prompts: <code>evals/evals.json</code></p>
     </section>
   </div>

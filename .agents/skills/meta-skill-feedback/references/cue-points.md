@@ -48,6 +48,11 @@ only in `SKILL.md` or a domain reference file, not wake:
 - The output belongs in the task itself (proposals, summaries, audit rows)
 - Pure user preference with no skill gap
 
+## Same issue again
+
+Do not open a second file. Add **+1** under **Votes** and an **Agent comments**
+entry on the existing open note — see [convention.md](convention.md).
+
 ## Legacy Obsidian queues
 
 If a skill still has `agent-memories/skills-feedback/<name>.md`, **do not add a
