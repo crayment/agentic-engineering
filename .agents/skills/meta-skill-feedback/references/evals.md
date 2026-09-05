@@ -10,6 +10,7 @@ do not fork PAC into this skill. Load:
 | Path | Purpose |
 |------|---------|
 | `evals/evals.json` | Prompts + expectations |
+| `evals/overview.html` | Human-readable: skill purpose, what evals test, v0 results |
 | `evals/fixtures/` | Copy-only target skills (never edit in place) |
 | `scripts/check_eval_outputs.py` | Deterministic checks for grader |
 | `meta-skill-feedback-workspace/` | Iteration runs (gitignored, repo sibling) |
@@ -36,6 +37,8 @@ PAC expects eval directories named `eval-*` (e.g. `eval-bootstrap-minimal/`).
 5. **Viewer:** `python3 eval-viewer/generate_review.py $WS/iteration-1 --skill-name meta-skill-feedback --benchmark $WS/iteration-1/benchmark.json --static $WS/iteration-1/review.html`
 
 ## Evals (v0)
+
+See **[evals/overview.html](../evals/overview.html)** for a readable summary of what we’re testing and early results.
 
 | id | name | Tests |
 |----|------|-------|

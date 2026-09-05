@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>meta-skill-feedback — skill &amp; evals overview</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #1a2332;
+      --border: #2d3a4f;
+      --text: #e7ecf3;
+      --muted: #8b9cb3;
+      --accent: #6ee7b7;
+      --accent2: #93c5fd;
+      --warn: #fbbf24;
+      --good: #4ade80;
+      --bad: #f87171;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      padding: 1.25rem 1.5rem 2rem;
+    }
+    .wrap { max-width: 720px; margin: 0 auto; }
+    h1 { font-size: 1.45rem; margin: 0 0 0.35rem; }
+    .sub { color: var(--muted); font-size: 0.95rem; margin-bottom: 1.25rem; }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.15rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+    h2 { font-size: 0.95rem; margin: 0 0 0.65rem; color: var(--accent2); }
+    p { margin: 0.5rem 0 0; font-size: 0.9rem; }
+    p:first-child { margin-top: 0; }
+    .lead { font-size: 0.95rem; color: var(--text); }
+    pre, code {
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 0.78rem;
+    }
+    pre {
+      background: #0b1017;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.7rem 0.9rem;
+      overflow-x: auto;
+      margin: 0.6rem 0 0;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 0.5rem; }
+    th, td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--muted); font-weight: 500; }
+    .pill {
+      display: inline-block;
+      font-size: 0.68rem;
+      padding: 0.12rem 0.45rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      margin-right: 0.3rem;
+      color: var(--muted);
+    }
+    .pill.exp { border-color: var(--warn); color: var(--warn); }
+    .pill.yes { border-color: var(--good); color: var(--good); }
+    .pill.no { border-color: var(--bad); color: var(--bad); }
+    .pill.pending { border-color: var(--muted); color: var(--muted); }
+    ul { margin: 0.5rem 0 0; padding-left: 1.2rem; font-size: 0.88rem; }
+    li { margin: 0.35rem 0; }
+    .compare { display: grid; gap: 0.75rem; }
+    @media (min-width: 640px) { .compare { grid-template-columns: 1fr 1fr; } }
+    .card {
+      background: #0b1017;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-size: 0.85rem;
+    }
+    .card strong { color: var(--accent); display: block; margin-bottom: 0.35rem; }
+    .bar-wrap { display: flex; align-items: center; gap: 0.5rem; margin: 0.4rem 0; font-size: 0.82rem; }
+    .bar { height: 7px; border-radius: 4px; background: var(--border); flex: 1; max-width: 140px; }
+    .bar-fill { height: 100%; border-radius: 4px; background: var(--good); }
+    .bar-fill.warn { background: var(--warn); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>meta-skill-feedback</h1>
+      <p class="sub">What this skill does · what the v0 evals actually test · early results</p>
+      <span class="pill exp">experimental v0</span>
+      <span class="pill">agentic-engineering</span>
+    </header>
+
+    <section>
+      <h2>What this skill is</h2>
+      <p class="lead"><strong>meta-skill-feedback</strong> is a meta-skill: it teaches agents how to add a <em>runtime friction inbox</em> to another skill, and how to use that inbox after a real job.</p>
+      <p>It does <strong>not</strong> edit your rules, task outputs, or the target skill’s behavior on its own. It wires structure + cues so surprises become reviewable notes.</p>
+    </section>
+
+    <section>
+      <h2>Two production modes (not the same thing)</h2>
+      <div class="compare">
+        <div class="card">
+          <strong>1 · Bootstrap</strong>
+          Cody (or an agent) asks: “add feedback to skill X.”<br><br>
+          Agent creates <code>feedback/</code>, <code>feedback/README.md</code>, <code>feedback/resolved/</code>, and finish-line cues in the target <code>SKILL.md</code> (and maybe <code>wake.md</code>).
+        </div>
+        <div class="card">
+          <strong>2 · Runtime</strong>
+          Agent finishes a normal job using a skill that already has <code>feedback/</code>.<br><br>
+          If something <em>non-routine</em> misled them → write one timestamped <code>.md</code> file. Routine run → write nothing. Never edit the skill.
+        </div>
+      </div>
+      <pre>target-skill/
+├── SKILL.md           ← “Before you finish” → feedback/README.md
+└── feedback/
+    ├── README.md
+    ├── 2026-09-05T0948-slug.md   ← open
+    └── resolved/                 ← after Cody reviews</pre>
+    </section>
+
+    <section>
+      <h2>What the v0 evals test (PAC harness)</h2>
+      <p class="lead">Evals live in <code>evals/evals.json</code>. They use the <strong>provider-agnostic-skill-creator</strong> loop in dotfiles (with_skill vs without_skill baseline). Fixtures under <code>evals/fixtures/</code> are fake mini-skills — we never mutate real skills during evals.</p>
+
+      <table>
+        <tr>
+          <th>Eval</th>
+          <th>What we ask the agent to do</th>
+          <th>What we assert</th>
+          <th>Status</th>
+        </tr>
+        <tr>
+          <td><strong>bootstrap-minimal</strong></td>
+          <td>Copy bare fixture → <code>outputs/</code>, then <strong>install</strong> feedback inbox using meta-skill-feedback.</td>
+          <td><code>feedback/README.md</code>, <code>resolved/</code>, cues in <code>SKILL.md</code>; no seeded friction files; no scaffold script.</td>
+          <td><span class="pill yes">ran</span></td>
+        </tr>
+        <tr>
+          <td><strong>bootstrap-wake-shaped</strong></td>
+          <td>Same, but fixture has <code>references/wake.md</code> — agent must adapt cues for scheduled-wake shape.</td>
+          <td>Above + wake-appropriate README / finish-line mention.</td>
+          <td><span class="pill pending">pending</span></td>
+        </tr>
+        <tr>
+          <td><strong>runtime-quiet</strong></td>
+          <td>Copy <em>already bootstrapped</em> fixture; simulate a <strong>routine</strong> run with no surprises.</td>
+          <td><strong>No</strong> new friction <code>.md</code>; <code>SKILL.md</code> unchanged.</td>
+          <td><span class="pill pending">pending</span></td>
+        </tr>
+      </table>
+
+      <p style="margin-top:0.85rem;"><strong>Important distinction:</strong></p>
+      <ul>
+        <li>Evals <strong>1–2</strong> test <strong>bootstrap</strong> — “can an agent install the inbox correctly?”</li>
+        <li>Eval <strong>3</strong> tests <strong>runtime discipline</strong> — “on a quiet run, does the agent stay silent?”</li>
+        <li>We do <strong>not</strong> yet eval: agent mid-job hits surprise → writes a high-quality friction note. That’s production behavior; future eval or human review.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>With skill vs baseline (what “pass” means)</h2>
+      <p>Each eval runs twice:</p>
+      <ul>
+        <li><strong>with_skill</strong> — executor reads meta-skill-feedback</li>
+        <li><strong>without_skill</strong> — same prompt, no meta-skill (agent improvises)</li>
+      </ul>
+      <p><code>scripts/check_eval_outputs.py</code> checks filesystem facts; PAC aggregates into <code>benchmark.md</code> + review viewer.</p>
+
+      <p style="margin-top:0.75rem;font-size:0.85rem;color:var(--muted);">Iteration 1 · bootstrap-minimal only:</p>
+      <div class="bar-wrap">
+        <span style="width:5rem;">with_skill</span>
+        <div class="bar"><div class="bar-fill" style="width:100%"></div></div>
+        <strong>5/5</strong>
+      </div>
+      <div class="bar-wrap">
+        <span style="width:5rem;">baseline</span>
+        <div class="bar"><div class="bar-fill warn" style="width:40%"></div></div>
+        <strong>2/5</strong>
+      </div>
+      <p style="font-size:0.85rem;color:var(--muted);">Baseline “passed” only trivial checks (no extra files, no scaffold). It did not create <code>feedback/</code> or cues — that’s the gap we’re measuring.</p>
+    </section>
+
+    <section>
+      <h2>Three different “feedback” words</h2>
+      <table>
+        <tr><th>Name</th><th>What</th><th>Who writes</th></tr>
+        <tr>
+          <td><code>feedback/*.md</code> in a skill</td>
+          <td>Runtime friction notes from real agent runs</td>
+          <td>Agent after surprise</td>
+        </tr>
+        <tr>
+          <td>PAC <code>feedback.json</code></td>
+          <td>Your notes after reviewing eval benchmark viewer</td>
+          <td>Cody in review UI</td>
+        </tr>
+        <tr>
+          <td>Rule proposals / audit logs</td>
+          <td>Task output (e.g. email <code>actions.md</code>)</td>
+          <td>Domain agent — not this inbox</td>
+        </tr>
+      </table>
+    </section>
+
+    <section>
+      <h2>Confidence &amp; next steps</h2>
+      <p>This is an <strong>early experiment</strong>. v0 proves:</p>
+      <ul>
+        <li>Agents with the skill can bootstrap a minimal fixture reliably (5/5 vs 2/5).</li>
+        <li>We have deterministic checks + a PAC-shaped loop to iterate.</li>
+      </ul>
+      <p>Still to prove: wake-shaped adaptation, runtime-quiet discipline, and eventually “writes a good friction note when misled.”</p>
+      <p style="font-size:0.85rem;color:var(--muted);margin-top:0.75rem;">Run details: <code>references/evals.md</code> · prompts: <code>evals/evals.json</code></p>
+    </section>
+  </div>
+</body>
+</html>
