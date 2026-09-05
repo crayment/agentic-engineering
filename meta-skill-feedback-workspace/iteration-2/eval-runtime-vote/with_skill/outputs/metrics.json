@@ -1,7 +1,0 @@
-{
-  "eval": "runtime-vote",
-  "target": "outputs/counter-skill-dedupe",
-  "line_count": 3,
-  "friction": "data/project.txt missing; used inputs/project.txt",
-  "feedback_action": "voted +1 on 2026-08-01T1200-wrong-data-path.md"
-}
