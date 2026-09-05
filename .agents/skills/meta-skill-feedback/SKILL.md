@@ -23,10 +23,12 @@ discover something, or a near-miss happened.*
 
 | Mode | Trigger |
 |------|---------|
-| **Bootstrap** | Cody asks to add feedback to a skill, or you're packaging a skill that lacks `feedback/` |
+| **Bootstrap** | Cody asks an agent to use **meta-skill-feedback** to add a feedback system to a target skill, or you're packaging a skill that lacks `feedback/` |
 | **Runtime** | You finished a job using a skill that already has `feedback/README.md` — follow that README, not this file |
 
 ## Bootstrap workflow
+
+Cody’s typical ask: *“Use **meta-skill-feedback** to add a feedback system to &lt;target-skill&gt;.”* Load this skill first, then work on the target skill’s tree.
 
 Read the target skill first. Adapt layout and cues to **how that skill actually
 works** — scheduled wake, interactive triage, one-shot CLI, etc. The convention

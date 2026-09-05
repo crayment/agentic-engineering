@@ -1,7 +1,11 @@
 # Bootstrapping feedback on a target skill
 
-You are wiring a **runtime friction inbox** onto an existing skill. Use judgment;
-adapt names, sections, and extra cues to that skill's shape.
+You are wiring a **runtime friction inbox** onto an **existing target skill**.
+Cody’s ask is usually explicit: use the **meta-skill-feedback** skill to add a
+feedback system to `<target-skill>` (e.g. email-inbox-agent). Load meta-skill-feedback
+first; do not bootstrap from memory alone.
+
+Use judgment; adapt names, sections, and extra cues to that skill's shape.
 
 ## Minimum deliverables
 
