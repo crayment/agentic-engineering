@@ -6,6 +6,7 @@
 # Usage:
 #   agent-browser.sh ensure [url]   # launch if needed (default), then print the CDP url
 #   agent-browser.sh status         # report whether it's running
+#   agent-browser.sh idle           # close leftover page tabs; leave one about:blank
 #   agent-browser.sh restart [url]  # kill this profile's Chrome and relaunch
 #
 # Attach browser-use to it with the abu.sh wrapper (recommended — see SKILL.md):
@@ -13,6 +14,7 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PORT="${AGENT_BROWSER_PORT:-9333}"
 PROFILE="${AGENT_BROWSER_PROFILE:-$HOME/.agent-browser}"
 CHROME="${AGENT_BROWSER_CHROME:-/Applications/Google Chrome.app/Contents/MacOS/Google Chrome}"
@@ -126,8 +128,17 @@ case "${cmd}" in
     launch "${2:-about:blank}"
     echo "${CDP_URL}"
     ;;
+  idle)
+    # Collapse leftover *page* tabs to one about:blank. Never quits Chrome — that
+    # would drop the persistent profile's cookies/SSO. Safe no-op if it's down.
+    if ! is_running; then
+      echo "not running (port ${PORT}); nothing to idle" >&2
+      exit 0
+    fi
+    python3 "${SCRIPT_DIR}/idle-tabs.py" "${CDP_URL}"
+    ;;
   *)
-    echo "usage: agent-browser.sh {ensure [url]|status|restart [url]}" >&2
+    echo "usage: agent-browser.sh {ensure [url]|status|idle|restart [url]}" >&2
     exit 2
     ;;
 esac

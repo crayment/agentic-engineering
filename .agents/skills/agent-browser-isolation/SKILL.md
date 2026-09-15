@@ -1,6 +1,6 @@
 ---
 name: agent-browser-isolation
-description: "Use a dedicated, always-available second Chrome (the \"agent browser\") for all local browser automation instead of driving the user's real Chrome. Covers launching/keeping it alive on a fixed debug port + persistent profile, attaching browser-use to it via BU_CDP_URL, and owning a single tab by its stable targetId. Use whenever doing local browser-use / CDP work where you want isolation from the user's own browser (screenshots, testing a local app, clicking through a web UI)."
+description: "Use a dedicated, always-available second Chrome (the \"agent browser\") for all local browser automation instead of driving the user's real Chrome. Covers launching/keeping it alive on a fixed debug port + persistent profile, attaching browser-use to it via BU_CDP_URL, owning a single tab by its stable targetId, and collapsing leftover work tabs to one about:blank when the task is done (`idle`). Use whenever doing local browser-use / CDP work where you want isolation from the user's own browser (screenshots, testing a local app, clicking through a web UI)."
 ---
 
 # The Agent Browser
@@ -73,18 +73,58 @@ prints the CDP url:
 ```bash
 "$SKILL"/scripts/agent-browser.sh ensure          # launch if needed, print url
 "$SKILL"/scripts/agent-browser.sh status          # is it running?
+"$SKILL"/scripts/agent-browser.sh idle            # close leftover page tabs; leave one about:blank
 "$SKILL"/scripts/agent-browser.sh restart         # kill this profile's Chrome + relaunch
 ```
 
 `ensure` is safe to call every time — if the browser is already running it does
-nothing but print the url. It **keeps the window open**: never `close_tab` the
-last tab or quit Chrome when you finish; just leave it running for the next
-agent.
+nothing but print the url. Chrome **stays running** across tasks (cookies/SSO
+live in the profile). What must **not** stay is a pile of work tabs — see
+**Cleanup when done** below. Never quit Chrome, and never `close_tab` the last
+tab yourself; `idle` replaces leftovers with one `about:blank` so the process
+does not exit.
 
 If some *other* Chrome is already listening on the port with a different profile,
 `ensure`/`status` print a loud **WARNING** (and still return the url, so shared
 setups keep working) — that means you're not on the dedicated profile. Free the
 port or set `AGENT_BROWSER_PORT` if you need true isolation.
+
+## Cleanup when done (mandatory)
+
+Leftover Marketplace / login / search tabs sit at full renderer speed (throttling
+is off on purpose) and will grind a Mini if they accumulate. **Every automated
+task that uses this browser must idle it when the work is finished** — success,
+skip, or error. Cookies stay; only page tabs go away.
+
+```bash
+"$SKILL"/scripts/agent-browser.sh idle    # preferred
+"$SKILL"/scripts/abu.sh idle              # same thing; BU_NAME not required
+```
+
+`idle` talks to Chrome's debug HTTP API (no `browser-use` daemon). It opens
+`about:blank` first if needed, then closes every other **page** tab. Chrome
+itself stays up.
+
+**Scripts** — trap it so a crash cannot leave a mess:
+
+```bash
+ABU="$SKILL/scripts/abu.sh"
+cleanup_agent_browser() { "$SKILL/scripts/agent-browser.sh" idle || true; }
+trap cleanup_agent_browser EXIT
+"$ABU" <<'PY'
+# ... scrape ...
+PY
+```
+
+**Interactive / woken agents** — last browser action before you consider the
+task done is `idle`. Do not leave Facebook, Reddit, Poshmark, Okta, or
+`authenticator.*` tabs open "for next time"; the profile already has the
+session.
+
+Do **not** call `idle` while another agent is still driving this browser (it
+will close their tab). Unattended jobs (marketplace watcher, hunts) should
+idle at the end of *their* run; if a second agent might be mid-task, skip
+`idle` and close only the `targetId` you opened.
 
 ## Attach browser-use to it
 
@@ -255,10 +295,13 @@ Rules for concurrent agents:
   and only ever `switch_tab` to *your* id. Reading `current_tab()` to compare is
   fine, but never *adopt* whatever tab happens to be current (or `list_tabs()[0]`)
   as yours — it may be another agent's.
-- **Don't close other tabs or quit Chrome.** Only `close_tab(YOUR_TAB)` at most;
-  leave everyone else's tabs alone.
+- **Don't close other agents' tabs or quit Chrome while they are working.**
+  Only `close_tab(YOUR_TAB)` mid-task. When *your* task is finished, `idle`
+  unless you know another agent is still using the browser.
 - Background-tab throttling is already disabled by the launch flags, so your tab
   keeps running full-speed even while another agent's tab is foregrounded.
+  That is also why leftover tabs are expensive — they never go idle on their
+  own. Close them with `agent-browser.sh idle` when the job is done.
 
 ### Spawning a sub-agent that uses the browser
 
@@ -284,7 +327,8 @@ tabs are preserved across calls. And `launch()` starts Chrome **detached from th
 calling shell**: on macOS it uses `open`, so Chrome becomes a child of launchd
 (PPID 1), not of your shell. That means it **survives the agent/shell that
 launched it dying** — no holder job and no launchd plist required. It stays up
-until something quits it or you reboot.
+until something quits it or you reboot. `idle` is the opposite of `restart`:
+it **must not** kill Chrome — it only closes leftover page tabs.
 
 - **Why this matters:** many agents run shell commands in a sandbox that reaps
   the whole process group when the command ends — a plain `&`-backgrounded Chrome

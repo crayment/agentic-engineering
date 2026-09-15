@@ -13,9 +13,17 @@
 #   abu.sh <<'PY'
 #   print(page_info())
 #   PY
+# Cleanup when the automated task is done (no BU_NAME needed):
+#   abu.sh idle
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Tab cleanup does not need a daemon handle — it talks to Chrome's debug HTTP
+# API and leaves one about:blank so the process stays alive.
+if [[ "${1:-}" == "idle" ]]; then
+  exec "${SCRIPT_DIR}/agent-browser.sh" idle
+fi
 
 # BU_NAME is required, never defaulted: a shared default would let parallel
 # agents clobber each other's current tab (see SKILL.md "Parallel agents").
