@@ -339,3 +339,9 @@ it **must not** kill Chrome — it only closes leftover page tabs.
 - **Only if you still see it die** (a stricter sandbox, or the non-`open` fallback
   path): keep a background holder job alive (`agent-browser.sh ensure && sleep
   <long>`), or add a launchd LaunchAgent if you *also* want it auto-started on boot.
+
+## Before you finish
+
+If anything misled you, failed oddly, or required discovery not covered here,
+write **one file** in `feedback/` — see [feedback/README.md](feedback/README.md).
+Do not edit this skill. Skip when the run was routine.
