@@ -38,6 +38,32 @@ Every place skills can live is a **scope**: the current project (nearest
   copy. Never write skill content directly under `.claude/skills` (or
   `.cursor/skills`) -- those are link-only, never originals.
 
+### Cursor (third-party skills setting **off**)
+
+For now we keep Cursor's setting to load skills from `.claude/skills` **turned
+off** and use a **single symlink per scope** instead of per-skill `.cursor`
+links:
+
+| Scope | Symlink | How |
+|---|---|---|
+| **HOME** | `~/.cursor/skills` → `~/.agents/skills` | `dotfiles/install.sh` (after `~/.agents` → dotfiles) |
+| **PROJECT** | `<repo>/.cursor/skills` → `../.agents/skills` | Run once per clone/worktree: `ln -s ../.agents/skills .cursor/skills` |
+
+Cursor then sees the same skill tree as `.agents/skills/` for that scope. HOME
+loads personal skills; a project repo (e.g. FVD) adds its committed
+`.agents/skills/` on top when you open that workspace.
+
+**Project note:** many repos gitignore `.cursor/*` except rules — the project
+symlink is often **machine-local** unless the repo adds a `!.cursor/skills/`
+exception and commits it. FVD today: local symlink only.
+
+**Claude Code** still uses per-skill `.claude/skills/<name>` → `.agents/skills/<name>`
+symlinks; do not remove those when maintaining Cursor this way.
+
+Revisit turning the Cursor setting **on** when we want Cursor-native discovery
+without the umbrella symlink — that would mirror the `.claude` per-skill layout
+instead.
+
 Directories can't be hardlinked (OS limitation on macOS/Linux) -- always use a
 directory symlink, never a copy.
 
