@@ -72,6 +72,10 @@ SOURCE_REPOS = [
     ("dotfiles", HOME / "dev/me/dotfiles/agents/skills"),
 ]
 
+DOTFILES_SKILLS = HOME / "dev/me/dotfiles/agents/skills"
+CURSOR_SKILLS = HOME / ".cursor/skills"
+AGENTS_SKILLS = HOME / ".agents/skills"
+
 # --full only: personal install roots whose immediate children are individual
 # skill dirs, cross-linked against each other and against SOURCE_REPOS.
 LINKABLE_ROOTS = SOURCE_REPOS + [
@@ -386,6 +390,74 @@ def mirror_status(mirrors: dict[str, list[Path]], home_scope: dict[str, Skill], 
     return rows
 
 
+def check_dotfiles_collection_symlinks() -> list[tuple[str, str, str]]:
+    """Direct symlink children under dotfiles/agents/skills that point at
+    external repos. Returns (status, name, message) rows."""
+    rows: list[tuple[str, str, str]] = []
+    if not DOTFILES_SKILLS.is_dir():
+        return rows
+    home_str = str(HOME)
+    for child in sorted(DOTFILES_SKILLS.iterdir()):
+        if not child.is_symlink():
+            continue
+        raw = os.readlink(child)
+        if not child.exists():
+            hint = f"dangling -> {raw}"
+            if raw.startswith("/Users/") and not raw.startswith(home_str):
+                hint += " (username-specific absolute path; use a relative symlink in dotfiles)"
+            rows.append(("ERROR", child.name, hint))
+            continue
+        if os.path.isabs(raw) and not raw.startswith(home_str):
+            rows.append(("WARN", child.name, f"absolute path outside $HOME -> {raw} (prefer relative in git)"))
+        elif os.path.isabs(raw):
+            rows.append(("WARN", child.name, f"absolute path in git -> {raw} (prefer relative)"))
+    return rows
+
+
+def check_cursor_harness_symlink() -> tuple[str, str]:
+    """~/.cursor/skills should be a single symlink to ~/.agents/skills."""
+    expected = AGENTS_SKILLS.resolve()
+    if CURSOR_SKILLS.is_symlink():
+        if not CURSOR_SKILLS.exists():
+            return "ERROR", f"broken symlink -> {os.readlink(CURSOR_SKILLS)}"
+        target = CURSOR_SKILLS.resolve()
+        if target == expected:
+            return "OK", f"-> {label_target(target)}"
+        return "WARN", f"points to {label_target(target)} instead of ~/.agents/skills"
+    if CURSOR_SKILLS.is_dir():
+        return "WARN", "real directory (expected symlink to ~/.agents/skills)"
+    if CURSOR_SKILLS.exists():
+        return "WARN", "exists but is not a symlink to ~/.agents/skills"
+    return "WARN", "missing (run dotfiles/install.sh to link ~/.cursor/skills -> ~/.agents/skills)"
+
+
+def print_harness_checks(C: Colors) -> tuple[int, int]:
+    warns = errors = 0
+    print(C.bold("HARNESS  (machine-local skill roots)"))
+    status, msg = check_cursor_harness_symlink()
+    if status == "WARN":
+        warns += 1
+    elif status == "ERROR":
+        errors += 1
+    print(f"  {status_color(C, status, GLYPH[status])} {'cursor skills':<30} {status_color(C, status, msg) if msg else ''}")
+
+    collection = check_dotfiles_collection_symlinks()
+    symlinks = [c for c in DOTFILES_SKILLS.iterdir() if c.is_symlink()] if DOTFILES_SKILLS.is_dir() else []
+    if collection:
+        print(C.dim("  dotfiles/agents/skills external links:"))
+    for status, name, msg in collection:
+        if status == "WARN":
+            warns += 1
+        elif status == "ERROR":
+            errors += 1
+        print(f"  {status_color(C, status, GLYPH[status])} {name:<30} {status_color(C, status, msg)}")
+    if not symlinks:
+        print(C.dim("  dotfiles external links: (none)"))
+    elif not collection:
+        print(C.dim(f"  dotfiles external links: {len(symlinks)} symlink(s), all OK"))
+    return warns, errors
+
+
 def print_mirror_registry(C: Colors, rows: list[dict]) -> int:
     """Render the declared-mirror registry; return the warning count."""
     if not rows:
@@ -483,6 +555,12 @@ def main() -> None:
     mirror_rows = mirror_status(mirrors, per_scope["HOME"], project_root)
     if mirror_rows:
         total_warns += print_mirror_registry(C, mirror_rows)
+        print()
+
+    if same or HOME in {root for _, root in scopes}:
+        hw, he = print_harness_checks(C)
+        total_warns += hw
+        total_errors += he
         print()
 
     total = sum(len(s) for s in per_scope.values())
