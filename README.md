@@ -9,10 +9,13 @@ Reusable agent skills I've built and battle-tested in real engineering workflows
 npx skills add crayment/agentic-engineering
 ```
 
+This repo is **skills only** — public portfolio pieces you'd show on a GitHub profile. Private harness tooling (`install-skill`, `skills_doctor`, credentialed integrations) lives in my private dotfiles repo, not here.
+
 ## What's Here
 
 ```
 .agents/skills/
+├── elements-of-style/          # Prose quality (Strunk & White distilled)
 ├── git-branch-cleanup/         # Inspect + plan + approve before deleting anything
 ├── git-commit-messages/        # Subject-first, scannable commit messages
 ├── git-merge-conflict-resolution/  # Understand both sides before resolving
@@ -24,8 +27,8 @@ npx skills add crayment/agentic-engineering
 ├── github-pr-review/           # Multi-agent review + one batched GitHub submission
 ├── github-pull-request-creation/  # Heredoc-safe gh pr create with structured bodies
 ├── github-reply/               # Threaded PR replies via the GitHub /replies endpoint
+├── pithy-communication/      # Detailed but pithy — high signal-to-noise voice
 ├── recruit-junior/             # Frame an agent as a junior who looks things up and cites sources
-├── slack/                      # Send messages, DMs, thread replies via Slack API
 └── software-principles/        # Foundational engineering principles for agent context
 ```
 
@@ -51,7 +54,7 @@ Together these two let you run multiple agents in parallel on separate branches,
 
 ## Prerequisites
 
-Most skills assume `git`, `gh` (GitHub CLI), and `jq` are installed and authenticated. The Slack skill requires a Slack API token. Skills that reference agent trees and `birdhouse:agent/...` links require [Birdhouse](https://github.com/Birdhouse-Labs/birdhouse), but the orchestration patterns are worth reading either way.
+Most skills assume `git`, `gh` (GitHub CLI), and `jq` are installed and authenticated. Skills that reference agent trees and `birdhouse:agent/...` links require [Birdhouse](https://github.com/Birdhouse-Labs/birdhouse), but the orchestration patterns are worth reading either way.
 
 ## Who This Is For
 
