@@ -2,7 +2,7 @@ Public home for reusable agent skills (see README). **Skills only** — no harne
 
 Private skills, `install-skill`, and `skills_doctor` live in Cody's dotfiles repo
 (`~/dev/me/dotfiles`). After pulling dotfiles, agents should read
-`dotfiles/agents/PULL-LOG.md` for post-pull steps.
+`dotfiles/agents/decision-log/` — any dated entries since the last pull.
 
 ## Git
 
