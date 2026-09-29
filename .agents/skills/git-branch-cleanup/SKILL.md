@@ -42,13 +42,22 @@ Run the bundled script. Do not assemble the inventory by hand.
 python3 <this-skill-dir>/scripts/branch_inventory.py <any path inside the repo>
 ```
 
-It finds the main clone, runs `git fetch --prune` (skip with `--no-fetch`), and prints markdown. It counts commits against `origin/HEAD` (falling back to `origin/main`), never the local `main` branch. Forge state comes from `glab` or `gh` when one matches `origin`. Linear ticket links come from the `linear` CLI when it is installed. Warnings go to stderr.
+It finds the main clone, runs `git fetch --prune` (skip with `--no-fetch`), and prints one nested markdown list. It counts commits against `origin/HEAD` (falling back to `origin/main`), never the local `main` branch. Unpushed commits exclude anything already on the remote branch or on `origin/main`. MRs and PRs come from `glab` or `gh` when one matches `origin`. Linear ticket links come from the `linear` CLI when it is installed. Warnings go to stderr.
 
-Each tree row reads: date or unique-commit date range · unique commits, `in origin/main`, or `no common history` · dirty count · pushed state · MR or PR state.
+Each worktree gets a `Commits`, `Unpushed`, and `Uncommitted` bullet, then its MR and ticket links. Branches without a worktree get one line each under `No worktree`.
 
-## Step 2: Present It
+## Step 2: Fill The Summaries
 
-Paste the script's stdout as-is: the link list, then the code block. Do not re-format it into tables, and do not add a second inventory.
+The script leaves `{{summarize in ...: ...}}` placeholders where a sentence needs judgment. Replace every one. Do not leave a placeholder in the answer.
+
+- `Unpushed` placeholders list commit subjects. Replace with one sentence saying what that work does. Read `git log -p` only when the subjects are vague.
+- `Uncommitted` placeholders list entry and file counts, then porcelain paths. Replace with at most two sentences after reading `git -C <worktree> diff` and any short untracked files. Summarize a large untracked folder by what is in it, not file by file.
+
+Say what changed, not the file count alone. Name a change that appears in more than one worktree.
+
+## Step 3: Present It
+
+Paste the filled list as-is. Do not re-format it into tables or code blocks, and do not add a second inventory.
 
 Then check worktree metadata:
 
@@ -58,9 +67,9 @@ git worktree prune --dry-run
 
 Mention it only when it prints something.
 
-## Step 3: Propose Cleanup
+## Step 4: Propose Cleanup
 
-One short bullet list under the tree. Name each item and why, in a few words. Leave out anything that stays.
+One short bullet list under the inventory. Name each item and why, in a few words. Leave out anything that stays.
 
 Never propose:
 
@@ -72,7 +81,7 @@ Never propose:
 
 Ask which items should go. Do not delete in this step.
 
-## Step 4: Safe Deletion First
+## Step 5: Safe Deletion First
 
 For approved branches, prefer safe deletion:
 
@@ -90,7 +99,7 @@ git branch -d branch-one branch-two branch-three
 
 If a branch does not delete cleanly, stop and report why instead of automatically escalating.
 
-## Step 5: Force Delete Only By Explicit Approval
+## Step 6: Force Delete Only By Explicit Approval
 
 If a branch still contains unmerged work and the user wants it removed anyway:
 
@@ -100,7 +109,7 @@ git branch -D branch-name
 
 Use this only after the user explicitly approves force deletion. Approval of a named set that you already described as requiring `-D` counts.
 
-## Step 6: Worktree Cleanup
+## Step 7: Worktree Cleanup
 
 Handle worktrees separately from branches. Run removal from the main clone.
 
@@ -118,9 +127,9 @@ git worktree remove path/to/worktree
 
 If a branch is still checked out in a worktree, remove the worktree before deleting the branch.
 
-## Step 7: Verify Result
+## Step 8: Verify Result
 
-Rerun the script with `--no-fetch` and paste its output. Then say in one short list what was deleted and what was skipped.
+Rerun the script with `--no-fetch`, fill its placeholders, and paste it. Then say in one short list what was deleted and what was skipped.
 
 ## Birdhouse Guidance
 

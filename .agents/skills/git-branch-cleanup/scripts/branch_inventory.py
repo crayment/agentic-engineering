@@ -27,13 +27,16 @@ class Record:
     subject: str = ""
     upstream: str = ""
     track: str = ""
-    dirty: int | None = None
+    dirty_entries: list[str] = field(default_factory=list)
+    dirty_files: int = 0
     unique: int | None = None
     behind: int = 0
     first_date: str = ""
     last_date: str = ""
     unique_subjects: list[str] = field(default_factory=list)
-    push: str = ""
+    has_remote: bool = False
+    unpushed: int = 0
+    unpushed_subjects: list[str] = field(default_factory=list)
     reviews: list[dict] = field(default_factory=list)
     not_on_server: bool = False
     tickets: list[dict] = field(default_factory=list)
@@ -118,15 +121,29 @@ def fill_history(repo: str, record: Record, default: str) -> None:
         record.unique_subjects = [line.split("\x00", 1)[1] for line in lines[:50]]
 
 
-def fill_push(repo: str, record: Record) -> None:
-    if not record.branch or record.unique == 0:
+def fill_push(repo: str, record: Record, default: str) -> None:
+    if record.unique == 0:
         return
-    remote = f"refs/remotes/origin/{record.branch}"
-    if git(repo, "rev-parse", "--verify", "--quiet", remote).returncode != 0:
-        record.push = "unpushed"
+    excluded = [f"^{default}"]
+    if record.branch:
+        remote = f"refs/remotes/origin/{record.branch}"
+        record.has_remote = git(repo, "rev-parse", "--verify", "--quiet", remote).returncode == 0
+        if record.has_remote:
+            excluded.append(f"^{remote}")
+    if record.unique is None and not record.has_remote:
+        record.unpushed_subjects = [record.subject]
         return
-    ahead = int(git_out(repo, "rev-list", "--count", f"{remote}..{record.sha}"))
-    record.push = f"{ahead} unpushed" if ahead else "pushed"
+    lines = git_out(repo, "log", "--format=%s", record.sha, *excluded).splitlines()
+    record.unpushed = len(lines)
+    record.unpushed_subjects = lines[:20]
+
+
+def fill_dirty(record: Record) -> None:
+    if not record.path or not os.path.isdir(record.path):
+        return
+    record.dirty_entries = [line.strip() for line in git(record.path, "status", "--porcelain").stdout.splitlines() if line.strip()]
+    if record.dirty_entries:
+        record.dirty_files = len(git_out(record.path, "status", "--porcelain", "--untracked-files=all").splitlines())
 
 
 def parse_remote(url: str) -> tuple[str, str] | None:
@@ -259,40 +276,64 @@ class Linear:
         return found
 
 
-def compact_range(first: str, last: str) -> str:
+def plural(count: int, noun: str) -> str:
+    return f"{count} {noun}" if count == 1 else f"{count} {noun}s"
+
+
+def sentence(text: str) -> str:
+    return text[:1].upper() + text[1:]
+
+
+def summarize(limit: str, items: list[str]) -> str:
+    return "{{summarize in " + limit + ": " + " | ".join(items) + "}}"
+
+
+def date_span(first: str, last: str) -> str:
     if first == last:
-        return first
-    if first[:7] == last[:7]:
-        return f"{first}..{last[8:]}"
-    return f"{first}..{last}"
+        return f"on {first}"
+    return f"from {first} to {last[5:] if first[:4] == last[:4] else last}"
 
 
-def facts(record: Record, default: str, forge: Forge) -> str:
-    parts = []
+def commits_text(record: Record, default: str) -> str:
     if record.unique is None:
-        parts += [record.tip_date, "no common history"]
-    elif record.unique == 0:
-        parts += [record.tip_date, f"in {default}" + (f", behind {record.behind}" if record.behind else "")]
+        return f"no shared history with {default}, last commit {record.tip_date}."
+    trunk = sentence(default.split("/")[-1])
+    moved = f"{trunk} has moved {plural(record.behind, 'commit')} since." if record.behind else f"{trunk} has not moved since."
+    if record.unique == 0:
+        return f"already in {default}. {moved}"
+    span = date_span(record.first_date, record.last_date)
+    return f"{plural(record.unique, 'commit')} {span}, from the shared base with {default}. {moved}"
+
+
+def unpushed_text(record: Record, forge: Forge) -> str:
+    if record.unique == 0:
+        return ""
+    summary = summarize("1 sentence", record.unpushed_subjects) if record.unpushed_subjects else ""
+    if not record.branch:
+        text = f"{plural(record.unpushed, 'commit')} not on any branch. {summary}" if record.not_on_server else "on the server."
+    elif not record.has_remote:
+        text = (f"{plural(record.unpushed, 'commit')}, never pushed." if record.unpushed else "never pushed.") + f" {summary}"
+    elif record.unpushed:
+        text = f"{plural(record.unpushed, 'commit')}. {summary}"
     else:
-        noun = "commit" if record.unique == 1 else "commits"
-        parts += [compact_range(record.first_date, record.last_date), f"{record.unique} {noun}"]
-    if record.path:
-        parts.append("clean" if not record.dirty else f"dirty {record.dirty}")
-    if record.prunable:
-        parts.append("prunable")
+        text = "none."
     if "gone" in record.track:
-        parts.append("upstream gone")
-    if record.push:
-        parts.append(record.push)
-    if record.reviews:
-        parts.append(", ".join(f"{review['ref']} {review['state']}" for review in record.reviews))
-    elif not forge.kind:
-        parts.append("forge not checked")
-    elif record.not_on_server:
-        parts.append("not on server")
-    elif record.unique != 0:
-        parts.append(f"no {forge.noun}")
-    return " · ".join(parts)
+        text += " Upstream is gone."
+    if not forge.kind:
+        text += " Forge not checked."
+    elif record.has_remote and not record.reviews:
+        text += f" No {forge.noun}."
+    return text.strip()
+
+
+def uncommitted_text(record: Record) -> str:
+    if record.prunable or not os.path.isdir(record.path):
+        return "worktree directory is missing, prunable."
+    if not record.dirty_entries:
+        return "none."
+    count = len(record.dirty_entries)
+    head = f"{count} {'entry' if count == 1 else 'entries'}, {plural(record.dirty_files, 'file')}"
+    return summarize("2 sentences", [head, *record.dirty_entries[:12]])
 
 
 def label(record: Record, root: str) -> str:
@@ -308,39 +349,42 @@ def link_text(text: str) -> str:
     return text.replace("[", "\\[").replace("]", "\\]")
 
 
-def render(records: list[Record], root: str, default: str, forge: Forge) -> str:
-    out = []
-    for record in records:
-        links = [
-            f"  - [{review['ref']} · {review['state']} · {link_text(review['title'])}]({review['url']})"
-            for review in record.reviews
-        ] + [
-            f"  - [{ticket['identifier']}" + (f" · {link_text(ticket['title'])}" if ticket["title"] else "") + f"]({ticket['url']})"
-            for ticket in record.tickets
-        ]
-        if links:
-            out.append(f"- `{label(record, root)}`")
-            out.extend(links)
-    if out:
-        out.append("")
+def link_lines(record: Record, indent: str) -> list[str]:
+    reviews = [
+        f"{indent}- [{review['ref']} · {review['state']} · {link_text(review['title'])}]({review['url']})"
+        for review in record.reviews
+    ]
+    tickets = [
+        f"{indent}- [{ticket['identifier']}"
+        + (f" · {link_text(ticket['title'])}" if ticket["title"] else "")
+        + f"]({ticket['url']})"
+        for ticket in record.tickets
+    ]
+    return reviews + tickets
 
-    head = next(record for record in records if record.is_main_clone)
-    worktrees = [record for record in records if record.path and not record.is_main_clone]
-    loose = [record for record in records if not record.path]
-    tree = [label(head, root), f"    {head.branch or 'detached ' + head.sha[:9]}", f"    {facts(head, default, forge)}"]
-    for index, record in enumerate(worktrees):
-        last = index == len(worktrees) - 1 and not loose
-        tree.append(("└── " if last else "├── ") + label(record, root))
-        indent = "        " if last else "│       "
-        tree.append(indent + (record.branch or f"detached {record.sha[:9]}"))
-        tree.append(indent + facts(record, default, forge))
+
+def render(records: list[Record], root: str, default: str, forge: Forge) -> str:
+    out, loose = [], []
+    for record in records:
+        if not record.path:
+            loose.append(record)
+            continue
+        out.append(f"- `{label(record, root)}` · `{record.branch or 'detached ' + record.sha[:9]}`")
+        out.append(f"  - Commits: {commits_text(record, default)}")
+        unpushed = unpushed_text(record, forge)
+        if unpushed:
+            out.append(f"  - Unpushed: {unpushed}")
+        out.append(f"  - Uncommitted: {uncommitted_text(record)}")
+        out.extend(link_lines(record, "  "))
     if loose:
-        tree.append("└── no worktree")
-        for index, record in enumerate(loose):
-            last = index == len(loose) - 1
-            tree.append(("    └── " if last else "    ├── ") + record.branch)
-            tree.append(("        " if last else "    │   ") + facts(record, default, forge))
-    out += ["```text", *tree, "```"]
+        out.append("- No worktree")
+        for record in loose:
+            parts = [commits_text(record, default)]
+            unpushed = unpushed_text(record, forge)
+            if unpushed:
+                parts.append(sentence(unpushed))
+            out.append(f"  - `{record.branch}`: " + " ".join(parts))
+            out.extend(link_lines(record, "    "))
     return "\n".join(out)
 
 
@@ -374,8 +418,6 @@ def main() -> int:
             upstream=info.get("upstream", ""),
             track=info.get("track", ""),
         )
-        if os.path.isdir(record.path):
-            record.dirty = len(git_out(record.path, "status", "--porcelain").splitlines())
         records.append(record)
         if branch:
             seen.add(branch)
@@ -396,7 +438,8 @@ def main() -> int:
 
     def enrich(record: Record) -> None:
         fill_history(root, record, default)
-        fill_push(root, record)
+        fill_push(root, record, default)
+        fill_dirty(record)
         forge.fill(record, default_branch)
 
     with ThreadPoolExecutor(max_workers=8) as pool:
