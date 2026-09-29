@@ -2,6 +2,7 @@
 """Print a markdown inventory of every local branch and worktree in a git repo."""
 
 import argparse
+import datetime
 import json
 import os
 import re
@@ -13,6 +14,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 
 GIT = shutil.which("git") or "/usr/bin/git"
+SNAPSHOT_PREFIX = "trash: snapshot uncommitted changes"
 TICKET_RE = re.compile(r"(?<![A-Za-z0-9])([A-Za-z][A-Za-z0-9]{1,9})-(\d+)(?![0-9])")
 
 
@@ -363,9 +365,24 @@ def link_lines(record: Record, indent: str) -> list[str]:
     return reviews + tickets
 
 
+def trash_text(record: Record) -> str:
+    parts = record.branch.split("/")
+    trashed = parts[1] if len(parts) > 2 else record.tip_date
+    try:
+        age = (datetime.date.today() - datetime.date.fromisoformat(trashed)).days
+        when = f"trashed {trashed}, {plural(age, 'day')} ago."
+    except ValueError:
+        when = "trash date unknown."
+    snapshot = " Includes a snapshot of uncommitted changes." if record.subject.startswith(SNAPSHOT_PREFIX) else ""
+    return when + snapshot
+
+
 def render(records: list[Record], root: str, default: str, forge: Forge) -> str:
-    out, loose = [], []
+    out, loose, trashed = [], [], []
     for record in records:
+        if record.branch and record.branch.startswith("trash/"):
+            trashed.append(record)
+            continue
         if not record.path:
             loose.append(record)
             continue
@@ -385,6 +402,10 @@ def render(records: list[Record], root: str, default: str, forge: Forge) -> str:
                 parts.append(sentence(unpushed))
             out.append(f"  - `{record.branch}`: " + " ".join(parts))
             out.extend(link_lines(record, "    "))
+    if trashed:
+        out.append("- Trash")
+        for record in trashed:
+            out.append(f"  - `{record.branch}`: {trash_text(record)}")
     return "\n".join(out)
 
 
@@ -437,6 +458,8 @@ def main() -> int:
     forge, linear = Forge(root), Linear()
 
     def enrich(record: Record) -> None:
+        if record.branch and record.branch.startswith("trash/"):
+            return
         fill_history(root, record, default)
         fill_push(root, record, default)
         fill_dirty(record)
@@ -445,7 +468,9 @@ def main() -> int:
     with ThreadPoolExecutor(max_workers=8) as pool:
         list(pool.map(enrich, records))
 
-    wanted = {record.sha: linear.ids_for(record) for record in records}
+    wanted = {
+        record.sha: [] if (record.branch or "").startswith("trash/") else linear.ids_for(record) for record in records
+    }
     issues = linear.lookup(sorted({ticket for ids in wanted.values() for ticket in ids}))
     for record in records:
         record.tickets = [issues[ticket] for ticket in wanted[record.sha] if ticket in issues]

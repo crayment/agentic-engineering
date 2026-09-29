@@ -28,6 +28,7 @@ This skill is intentionally conservative.
 
 - Do not delete branches immediately after discovering them.
 - Do not force-delete branches unless the user explicitly approves that escalation.
+- Prefer trash over deletion for anything that exists nowhere else.
 - Do not remove worktrees without explicit approval.
 - Do not suggest editing global git config or adding aliases.
 - Treat branch cleanup and worktree cleanup as related but separate actions.
@@ -69,9 +70,12 @@ Mention it only when it prints something.
 
 ## Step 4: Propose Cleanup
 
-One short bullet list under the inventory. Name each item and why, in a few words. Leave out anything that stays.
+Two short bullet lists under the inventory, **Trash** and **Delete**. Name each item and why, in a few words. Leave out anything that stays.
 
-For each item, say what deleting it loses: unpushed commits, uncommitted changes, or nothing. Do not call work superseded or folded into something else unless a merged MR, PR, or ticket shows it.
+- **Trash** is for anything that exists nowhere else: unpushed commits or uncommitted changes. It stays local and can be restored.
+- **Delete** is for work that is already safe elsewhere: fully pushed, or merged through an MR or PR, with no uncommitted changes.
+
+When you judge work superseded or folded into something else, give the evidence in a few words, for example "SSF-2016 shipped in !5454."
 
 Never propose:
 
@@ -79,61 +83,53 @@ Never propose:
 - the branch checked out in the main clone
 - the local default branch when the user's rules say to keep it
 
-Propose the local default branch when the user's rules say not to keep one.
+Propose deleting the local default branch when the user's rules say not to keep one.
 
-`git branch -d` refuses squash-merged and rewritten work even when it shipped. When the forge says the work merged, say `-D` is needed and ask before using it.
+When the Trash section has branches older than 30 days, propose emptying them in a third list.
 
-Ask which items should go. Do not delete in this step.
+Ask which items should go. Do not change anything in this step.
 
-## Step 5: Safe Deletion First
+## Step 5: Trash Approved Items
 
-For approved branches, prefer safe deletion:
-
-```bash
-git branch -d branch-name
-```
-
-If deleting multiple approved branches, do it as a reviewed list, not a blind one-liner.
-
-Example:
+Dry-run first, then run it on the approved branches, from anywhere in the repo:
 
 ```bash
-git branch -d branch-one branch-two branch-three
+python3 <this-skill-dir>/scripts/trash_branch.py <repo> <branch>... --dry-run
+python3 <this-skill-dir>/scripts/trash_branch.py <repo> <branch>...
 ```
 
-If a branch does not delete cleanly, stop and report why instead of automatically escalating.
+For each branch it snapshots uncommitted and untracked changes in its worktree as one commit on top of the branch, creates `trash/<date>/<branch>`, removes the worktree, then deletes the original name. Ignored files such as `.env` links are not saved. It refuses a branch checked out in the main clone. `trash/*` is local only; never push it.
 
-## Step 6: Force Delete Only By Explicit Approval
-
-If a branch still contains unmerged work and the user wants it removed anyway:
+To restore, rename it back and re-add the worktree. When the tip is a `trash: snapshot` commit, `git reset HEAD~1` inside the worktree brings the changes back as uncommitted:
 
 ```bash
-git branch -D branch-name
+git branch -m trash/<date>/<branch> <branch>
+git worktree add .worktrees/<name> <branch>
+git -C .worktrees/<name> reset HEAD~1
 ```
 
-Use this only after the user explicitly approves force deletion. Approval of a named set that you already described as requiring `-D` counts.
+## Step 6: Delete Approved Items
 
-## Step 7: Worktree Cleanup
+Run from the main clone. Remove the worktree before its branch.
 
-Handle worktrees separately from branches. Run removal from the main clone.
+```bash
+git worktree remove .worktrees/<name>
+git branch -d <branch>
+```
 
-Stale metadata only:
+`git branch -d` refuses squash-merged and rewritten work even when it shipped. If you already said an item needs `-D` and the user approved it, use `git branch -D`. Otherwise stop and report why instead of escalating.
+
+Emptying trash is a deletion. Use `git branch -D trash/<date>/<branch>` only for items the user named.
+
+Stale worktree metadata:
 
 ```bash
 git worktree prune
 ```
 
-Remove a specific worktree directory only with explicit approval:
+## Step 7: Verify Result
 
-```bash
-git worktree remove path/to/worktree
-```
-
-If a branch is still checked out in a worktree, remove the worktree before deleting the branch.
-
-## Step 8: Verify Result
-
-Rerun the script with `--no-fetch`, fill its placeholders, and paste it. Then say in one short list what was deleted and what was skipped.
+Rerun the inventory script with `--no-fetch`, fill its placeholders, and paste it. Then say in one short list what was trashed, deleted, and skipped.
 
 ## Birdhouse Guidance
 
