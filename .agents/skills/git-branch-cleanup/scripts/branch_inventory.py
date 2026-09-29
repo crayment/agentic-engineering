@@ -24,6 +24,7 @@ class Record:
     sha: str
     path: str | None = None
     is_main_clone: bool = False
+    spotlight: str = ""
     prunable: bool = False
     tip_date: str = ""
     subject: str = ""
@@ -377,6 +378,26 @@ def trash_text(record: Record) -> str:
     return when + snapshot
 
 
+def spotlight_text(root: str, head: Record, records: list[Record], default: str) -> str:
+    if head.branch != "spotlight":
+        return ""
+    if head.unique == 0:
+        return f"tracking {default}, {plural(head.behind, 'commit')} behind." if head.behind else f"at {default}."
+    others = [record for record in records if record is not head and record.branch and not record.branch.startswith("trash/")]
+    exact = [record for record in others if record.sha == head.sha]
+    older = [record for record in others if git(root, "merge-base", "--is-ancestor", head.sha, record.sha).returncode == 0]
+    for other, note in [(record, "") for record in exact] + [(record, ", an older commit of it") for record in older]:
+        where = f" in `{label(other, root)}`" if other.path else ""
+        if other.unique is None:
+            lag = f"That branch has no shared history with {default}."
+        else:
+            lag = f"That branch is {plural(other.behind, 'commit')} behind {default}."
+        return f"showing `{other.branch}`{where}{note}. {lag}"
+    if head.unique is None:
+        return f"no shared history with {default} and on no other local branch."
+    return f"{plural(head.unique, 'commit')} not in {default} and on no other local branch."
+
+
 def render(records: list[Record], root: str, default: str, forge: Forge) -> str:
     out, loose, trashed = [], [], []
     for record in records:
@@ -388,7 +409,9 @@ def render(records: list[Record], root: str, default: str, forge: Forge) -> str:
             continue
         out.append(f"- `{label(record, root)}` · `{record.branch or 'detached ' + record.sha[:9]}`")
         out.append(f"  - Commits: {commits_text(record, default)}")
-        unpushed = unpushed_text(record, forge)
+        if record.spotlight:
+            out.append(f"  - Spotlight: {record.spotlight}")
+        unpushed = "" if record.spotlight.startswith("showing") else unpushed_text(record, forge)
         if unpushed:
             out.append(f"  - Unpushed: {unpushed}")
         out.append(f"  - Uncommitted: {uncommitted_text(record)}")
@@ -476,6 +499,8 @@ def main() -> int:
         record.tickets = [issues[ticket] for ticket in wanted[record.sha] if ticket in issues]
 
     head = [record for record in records if record.is_main_clone]
+    for record in head:
+        record.spotlight = spotlight_text(root, record, records, default)
     worktrees = sorted(
         (record for record in records if record.path and not record.is_main_clone),
         key=lambda record: record.last_date or record.tip_date,

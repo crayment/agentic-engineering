@@ -85,6 +85,12 @@ Never propose:
 
 Propose deleting the local default branch when the user's rules say not to keep one.
 
+When the main clone is on `spotlight`, read its `Spotlight` bullet:
+
+- `tracking origin/main, N commits behind`: propose updating it with `git -C <main clone> merge --ff-only origin/main`.
+- `showing <branch>`: flag which branch it shows and how far behind origin/main that branch is. Propose nothing.
+- Commits on no other local branch: flag them. Propose nothing.
+
 When the Trash section has branches older than 30 days, propose emptying them in a third list.
 
 Ask which items should go. Do not change anything in this step.
@@ -126,6 +132,8 @@ Stale worktree metadata:
 ```bash
 git worktree prune
 ```
+
+An approved spotlight update is `git -C <main clone> merge --ff-only origin/main`. If it refuses, report why. Do not reset.
 
 ## Step 7: Verify Result
 
