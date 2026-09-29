@@ -95,6 +95,8 @@ When the Trash section has branches older than 30 days, propose emptying them in
 
 Ask which items should go. Do not change anything in this step.
 
+A bare "approved", "yes", or "go ahead" approves every item you proposed: each trash, each delete, any `-D` you flagged, and a spotlight update. Items the user names as exceptions stay. Then run Steps 5 to 7 without asking again.
+
 ## Step 5: Trash Approved Items
 
 Dry-run first, then run it on the approved branches, from anywhere in the repo:
