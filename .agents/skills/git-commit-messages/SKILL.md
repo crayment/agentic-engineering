@@ -30,3 +30,10 @@ Subject line
 
 - `AgentCard: Add gradient border on hover.`
 - `PatternsDialog: Fix mobile responsive layout.`
+
+## Before you finish
+
+If the format did not fit the change, clashed with the repo's convention, or
+left you guessing, write **one file** in `feedback/` — see
+[feedback/README.md](feedback/README.md). Do not edit this skill. Skip routine
+commits.

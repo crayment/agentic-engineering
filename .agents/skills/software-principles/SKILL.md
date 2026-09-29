@@ -29,3 +29,4 @@ description: "Core software development principles: code for readability and cha
   - Handle edge cases that are world breaking. A crash can trigger monitoring systems so the team becomes aware and fixes it. Silently bypassing unexpected conditions means the problem may never be noticed.
   - If a value is expected to exist at a point in the code, make it required and log if it is missing. If it is world breaking, crash. This principle can be applied broadly.
 - Follow the boy scout rule. Always try to leave the campground a bit cleaner than you found it.
+- Before you finish: if two principles pulled opposite ways with no tiebreak, or one clashed with the repo's convention, write one file in `feedback/` — see [feedback/README.md](feedback/README.md). Do not edit this skill. Skip when the principles simply applied.

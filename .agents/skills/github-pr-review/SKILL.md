@@ -284,4 +284,6 @@ After submission, report:
 - the final submitted summary text
 - any comments that were intentionally dropped or converted to summary-only
 
+If a bundled script failed, the artifact layout fell short, or a phase needed discovery not covered here, write **one file** in `feedback/` — see [feedback/README.md](feedback/README.md). Do not edit this skill or its scripts. Skip when the review was routine.
+
 If the review later receives feedback and you need to respond in-thread, use `[github-pr-feedback](birdhouse:skill/github-pr-feedback)`.

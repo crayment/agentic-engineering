@@ -453,3 +453,5 @@ Whether reporting investigation results or execution results, optimize for fast 
 - When reporting a posted reply, always include the reply link and quote the exact reply text
 - Always @ mention whoever you're replying to so they receive notification.
 - The main agent should not assume a drafted reply was posted. Always verify the posted reply link or re-fetch the thread data before reporting completion.
+
+Before reporting the loop complete: if the thread query, the triage scheme, or the serial-execution rules misled you or needed discovery not covered here, write **one file** in `feedback/` — see [feedback/README.md](feedback/README.md). Do not edit this skill. Skip when the loop was routine.

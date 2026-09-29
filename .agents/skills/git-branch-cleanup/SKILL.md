@@ -141,6 +141,8 @@ An approved spotlight update is `git -C <main clone> merge --ff-only origin/main
 
 Rerun the inventory script with `--no-fetch`, fill its placeholders, and paste it. Then say in one short list what was trashed, deleted, and skipped.
 
+If a script or step misled you, failed oddly, or needed discovery not covered here, write one file in `feedback/`. See [feedback/README.md](feedback/README.md). Do not edit this skill or its scripts. Skip when the run was routine.
+
 ## Birdhouse Guidance
 
 This is usually a single-agent task.

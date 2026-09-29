@@ -95,3 +95,7 @@ gh pr create --title "Add feature!" --body "Added cool stuff!\nReally fast now!"
 ## Overview
 
 Guides agents to use heredoc syntax when creating GitHub PRs with multi-line descriptions to avoid shell interpretation issues. Generated release notes should usually determine the PR body structure.
+
+## Before you finish
+
+If the body still got mangled, `gh pr create` surprised you, or you needed a flag not covered here, write **one file** in `feedback/` — see [feedback/README.md](feedback/README.md). Do not edit this skill. Skip when the PR opened cleanly.

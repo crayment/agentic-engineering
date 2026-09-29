@@ -68,6 +68,8 @@ When using the worktree workflow the human will likely be reviewing your commits
 
 **Never clean up a worktree without checking for uncommitted changes first.**
 
+If creating, bootstrapping, or staying inside the worktree needed discovery not covered here, write **one file** in `feedback/` — see [feedback/README.md](feedback/README.md). Do not edit this skill. Skip when the worktree behaved as written.
+
 ## Cleaning Up
 
 When work is merged and you no longer need the worktree:

@@ -107,3 +107,5 @@ After posting, report back with:
 - the reply URL if GitHub returns it or you can construct it
 - the exact reply text that was posted
 - the comment id you replied to
+
+If the endpoint rejected the id, the reply landed top-level, or you needed discovery not covered here, write **one file** in `feedback/` — see [feedback/README.md](feedback/README.md). Do not edit this skill. Skip when the reply posted in-thread as written.

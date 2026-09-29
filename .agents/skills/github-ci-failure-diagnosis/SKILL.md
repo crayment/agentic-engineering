@@ -109,3 +109,5 @@ When you report back, include:
 - the likely root cause
 - the most relevant error line or short excerpt
 - the recommended next step
+
+If a `gh` step behaved differently than described here, or the failed check had no path through these three steps, write **one file** in `feedback/` — see [feedback/README.md](feedback/README.md). Do not edit this skill. Skip when the diagnosis was routine.

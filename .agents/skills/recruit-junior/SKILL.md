@@ -73,3 +73,7 @@ Present your findings as a structured report.
 - A junior framing can produce more hedging language. That's usually fine — but if the agent is being overly uncertain about things it clearly found in current docs, you can follow up with: "You found the source. Trust it."
 - If the agent still skips tool use, make it more explicit: "Before answering anything, run a search and share what you found."
 - Junior framing works best on investigation and research agents. For an agent implementing a plan you've already decided on, just give it the plan.
+
+## Before You Finish
+
+If the framing did not produce grounded, cited research, or you had to patch the prompt in a way not covered here, write **one file** in `feedback/` — see [feedback/README.md](feedback/README.md). Do not edit this skill. Skip when the framing worked.

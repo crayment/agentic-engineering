@@ -106,3 +106,8 @@ Use those only when you are certain one side should win.
 2. Always read diffs from both sides.
 3. Never blindly accept one side.
 4. A few minutes of context saves hours of debugging.
+
+If a command pointed at the wrong ref, ours/theirs surprised you, or the
+conflict type was not covered here, write **one file** in `feedback/` — see
+[feedback/README.md](feedback/README.md). Do not edit this skill. Skip when the
+resolution was routine.

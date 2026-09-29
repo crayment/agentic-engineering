@@ -76,6 +76,8 @@ Confirm the top commit matches the worktree HEAD and the tree is clean.
 
 Inform the user that the spotlight is set.
 
+If a step failed, the main clone was in a state these steps do not cover, or you had to improvise, write **one file** in `feedback/` — see [feedback/README.md](feedback/README.md). Do not edit this skill. Skip when the spotlight moved cleanly.
+
 ## Notes
 
 - The `spotlight` branch is a plain local branch. It is never pushed to the remote.

@@ -96,3 +96,10 @@ to evaluate a text.
 **however** (meaning "nevertheless") - Don't put it first in the sentence.
 - ❌ The roads were almost impassable. However, we succeeded
 - ✅ The roads were almost impassable. At last, however, we succeeded
+
+## Before you finish
+
+If a rule made the prose worse, an example misled you, or you had to decide
+something this guide is silent on, write **one file** in `feedback/` — see
+[feedback/README.md](feedback/README.md). Do not edit this skill. Skip when the
+rules simply applied.

@@ -124,3 +124,7 @@ If you are using this skill while preparing a pull request:
 ## Overview
 
 Analyzes git commit history and generates customer-facing "What's New" and technical release notes from branch changes. The output also works well as a draft pull request description when preparing a PR.
+
+## Before you finish
+
+If the git range was wrong, the template did not fit the branch, or the grouping rules left you guessing, write **one file** in `feedback/` — see [feedback/README.md](feedback/README.md). Do not edit this skill. Skip when the run was routine.

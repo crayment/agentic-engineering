@@ -47,3 +47,6 @@ Examples:
 
 Also ask if you're uncertain whether I know something that seems relevant: flag it briefly rather than omitting or explaining at length.
 Example: 'You likely know X, but if not it matters here because Y.'
+
+## Before you finish
+If this style clashed with another rule, cost clarity, or did not fit an unattended run, write **one file** in `feedback/` — see [feedback/README.md](feedback/README.md). Do not edit this skill. Skip routine runs.
