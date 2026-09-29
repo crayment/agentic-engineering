@@ -71,11 +71,15 @@ Mention it only when it prints something.
 
 One short bullet list under the inventory. Name each item and why, in a few words. Leave out anything that stays.
 
+For each item, say what deleting it loses: unpushed commits, uncommitted changes, or nothing. Do not call work superseded or folded into something else unless a merged MR, PR, or ticket shows it.
+
 Never propose:
 
 - a branch with an open MR or PR
 - the branch checked out in the main clone
 - the local default branch when the user's rules say to keep it
+
+Propose the local default branch when the user's rules say not to keep one.
 
 `git branch -d` refuses squash-merged and rewritten work even when it shipped. When the forge says the work merged, say `-D` is needed and ask before using it.
 
