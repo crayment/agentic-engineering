@@ -32,6 +32,15 @@ This repo is **skills only** — public portfolio pieces you'd show on a GitHub 
 └── software-principles/        # Foundational engineering principles for agent context
 ```
 
+## Standalone skill repos
+
+Skills maintained in their own repositories (install separately):
+
+| Skill | Repo | Install |
+|-------|------|---------|
+| **meta-skill-feedback** | [crayment/meta-skill-feedback](https://github.com/crayment/meta-skill-feedback) | `npx skills add crayment/meta-skill-feedback` |
+| **provider-agnostic-skill-creator** | [crayment/provider-agnostic-skill-creator](https://github.com/crayment/provider-agnostic-skill-creator) | clone + symlink (see repo README) |
+
 ## Skills Worth Starting With
 
 ### PR Review Pipeline
